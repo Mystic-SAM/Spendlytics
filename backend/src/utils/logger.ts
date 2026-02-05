@@ -90,12 +90,20 @@ export class Logger {
    */
   static error(
     message: string,
-    error?: Error | string,
+    error?: any,
     metadata?: Record<string, any>,
   ): void {
-    const errorMessage = error instanceof Error ? error.message : error;
+    const errorObj =
+      error instanceof Error
+        ? error
+        : error
+          ? new Error(String(error))
+          : undefined;
+    const errorMessage = errorObj?.message || error;
     const stack =
-      this.isDevelopment && error instanceof Error ? error.stack : undefined;
+      this.isDevelopment && errorObj instanceof Error
+        ? errorObj.stack
+        : undefined;
 
     const logObject = {
       timestamp: new Date().toISOString(),

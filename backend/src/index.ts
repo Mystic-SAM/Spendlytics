@@ -10,6 +10,7 @@ import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { requestLoggerMiddleware } from "./middleware/request-logger.middleware.js";
 import { Logger } from "./utils/logger.js";
 import { NotFoundException } from "./utils/app-error.js";
+import { connectDatabase } from "./config/database.config.js";
 
 // Initialize logger (setup file logging and cleanup old logs)
 Logger.initialize();
@@ -73,7 +74,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(ErrorHandler);
 
 // Server Startup & Graceful Shutdown
-const server = app.listen(Env.PORT, () => {
+const server = app.listen(Env.PORT, async () => {
+  await connectDatabase();
   console.log(`Server is running on port ${Env.PORT} in ${Env.NODE_ENV} mode.`);
   Logger.info(`Server started successfully`, {
     port: Env.PORT,
@@ -122,12 +124,8 @@ process.on("uncaughtException", (error: Error) => {
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (reason: any) => {
-  Logger.error(
-    "Unhandled Rejection",
-    reason instanceof Error ? reason : new Error(String(reason)),
-    {
-      timestamp: new Date().toISOString(),
-    },
-  );
+  Logger.error("Unhandled Rejection", reason, {
+    timestamp: new Date().toISOString(),
+  });
   process.exit(1);
 });
