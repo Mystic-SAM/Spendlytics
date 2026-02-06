@@ -11,11 +11,13 @@ import { requestLoggerMiddleware } from "./middlewares/request-logger.middleware
 import { Logger } from "./utils/logger.js";
 import { NotFoundException } from "./utils/app-error.js";
 import { connectDatabase } from "./config/database.config.js";
+import authRoutes from "./routes/auth.routes.js";
 
 // Initialize logger (setup file logging and cleanup old logs)
 Logger.initialize();
 
 const app = express();
+const BASE_PATH = Env.BASE_PATH;
 
 /* Middleware Setup */
 
@@ -64,6 +66,8 @@ app.get(
   }),
 );
 
+app.use(`${BASE_PATH}/auth`, authRoutes);
+
 /**
  * 404 handler for undefined routes
  */
@@ -74,21 +78,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(ErrorHandler);
 
 // Server Startup & Graceful Shutdown
-const server = app.listen(Env.PORT, async () => {
-  await connectDatabase();
-  console.log(`Server is running on port ${Env.PORT} in ${Env.NODE_ENV} mode.`);
-  Logger.info(`Server started successfully`, {
-    port: Env.PORT,
-    environment: Env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  });
-});
-
-/**
- * Graceful shutdown handler
- * Closes the server and completes pending requests
- */
-const gracefulShutdown = (signal: string) => {
+const gracefulShutdown = (server: ReturnType<typeof app.listen>, signal: string) => {
   Logger.info(`${signal} signal received: closing HTTP server`, {
     signal,
     timestamp: new Date().toISOString(),
@@ -110,22 +100,40 @@ const gracefulShutdown = (signal: string) => {
   }, 30000);
 };
 
-// Handle termination signals
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+const startServer = async () => {
+  await connectDatabase();
 
-// Handle uncaught exceptions
-process.on("uncaughtException", (error: Error) => {
-  Logger.error("Uncaught Exception", error, {
-    timestamp: new Date().toISOString(),
+  const server = app.listen(Env.PORT, () => {
+    console.log(`Server is running on port ${Env.PORT} in ${Env.NODE_ENV} mode.`);
+    Logger.info(`Server started successfully`, {
+      port: Env.PORT,
+      environment: Env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+    });
   });
-  process.exit(1);
-});
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (reason: any) => {
-  Logger.error("Unhandled Rejection", reason, {
-    timestamp: new Date().toISOString(),
+  // Handle termination signals
+  process.on("SIGTERM", () => gracefulShutdown(server, "SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown(server, "SIGINT"));
+
+  // Handle uncaught exceptions
+  process.on("uncaughtException", (error: Error) => {
+    Logger.error("Uncaught Exception", error, {
+      timestamp: new Date().toISOString(),
+    });
+    process.exit(1);
   });
+
+  // Handle unhandled promise rejections
+  process.on("unhandledRejection", (reason: unknown) => {
+    Logger.error("Unhandled Rejection", reason, {
+      timestamp: new Date().toISOString(),
+    });
+    process.exit(1);
+  });
+};
+
+startServer().catch((error) => {
+  Logger.error("Failed to start server", error);
   process.exit(1);
 });

@@ -1,8 +1,23 @@
-import type { ErrorRequestHandler } from "express";
+import type { ErrorRequestHandler, Response } from "express";
 import { HTTP_STATUS } from "../config/http.config.js";
 import { AppError } from "../utils/app-error.js";
 import { Logger } from "../utils/logger.js";
 import { Env } from "../config/env.config.js";
+import { ErrorCodes } from "../enums/error-code.enum.js";
+import { z, ZodError } from "zod";
+
+const formatZodError = (res: Response, error: z.ZodError, requestId: string) => {
+  const errors = error?.issues?.map((err) => ({
+    field: err.path.join("."),
+    message: err.message,
+  }));
+  return res.status(HTTP_STATUS.BAD_REQUEST).json({
+    message: "Validation failed",
+    errors: errors,
+    errorCode: ErrorCodes.VALIDATION_ERROR,
+    requestId,
+  });
+};
 
 /**
  * Global error handling middleware.
@@ -23,6 +38,10 @@ export const ErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
         ? error.statusCode
         : HTTP_STATUS.INTERNAL_SERVER_ERROR,
   });
+
+  if (error instanceof ZodError) {
+    return formatZodError(res, error, requestId);
+  }
 
   // Handle AppError instances
   if (error instanceof AppError) {
