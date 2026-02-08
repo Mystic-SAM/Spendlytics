@@ -1,15 +1,16 @@
-import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 import { compareValue, hashValue } from "../utils/bcrypt.js";
 
-// Remove sensitive fields and convert _id to id
-const userTransform = (_doc: any, ret: any) => {
-  delete ret.password;
-  if (ret._id) {
-    ret.id = ret._id;
-    delete ret._id;
-  }
-  return ret;
-};
+export interface UserDocument extends Document {
+  name: string;
+  email: string;
+  profilePicture?: string | null;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+  comparePassword(password: string): Promise<boolean>;
+  omitPassword(): Omit<UserDocument, "password">;
+}
 
 /**
  * User schema. Password field is `select: false` to avoid accidental leakage.
@@ -42,8 +43,8 @@ const userSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
-    toJSON: { virtuals: true, transform: userTransform },
-    toObject: { virtuals: true, transform: userTransform },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
 
@@ -52,6 +53,12 @@ userSchema.pre("save", async function (this: any) {
     this.password = await hashValue(this.password as string);
   }
 });
+
+userSchema.methods.omitPassword = function (): Omit<UserDocument, "password"> {
+  const userObject = this.toObject();
+  delete userObject.password;
+  return userObject;
+};
 
 userSchema.methods.comparePassword = async function (
   password: string,
@@ -62,8 +69,4 @@ userSchema.methods.comparePassword = async function (
   return compareValue(password, hashed);
 };
 
-export type UserDocument = InferSchemaType<typeof userSchema> & {
-  comparePassword(password: string): Promise<boolean>;
-};
-
-export const UserModel = mongoose.model("User", userSchema);
+export const UserModel = mongoose.model<UserDocument>("User", userSchema);

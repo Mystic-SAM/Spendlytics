@@ -10,6 +10,9 @@ const _Env = {
   BASE_PATH: getEnv("BASE_PATH", "/api"),
   MONGO_URI: getEnv("MONGO_URI"),
   FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "localhost"),
+
+  JWT_SECRET: getEnv("JWT_SECRET"),
+  JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN", "1h"),
 } as const;
 
 export const Env = Object.freeze(_Env) as typeof _Env;
