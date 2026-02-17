@@ -18,14 +18,9 @@ import { useRegisterMutation } from "@/features/auth/authAPI";
 import { toast } from "sonner";
 import GithubIcon from "@/assets/Icons/GithubIcon";
 import { cn } from "@/lib/utils";
+import { signUpSchema } from "@/validators/authValidators";
 
-const schema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof signUpSchema>;
 
 const SignUpForm = ({
   className,
@@ -35,7 +30,7 @@ const SignUpForm = ({
   const [register, { isLoading }] = useRegisterMutation();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -130,7 +125,7 @@ const SignUpForm = ({
           </Button>
         </div>
         <div className="text-center text-sm">
-          Already have an account?
+          Already have an account?{" "}
           <Link
             to={AUTH_ROUTES.SIGN_IN}
             className="underline underline-offset-4"

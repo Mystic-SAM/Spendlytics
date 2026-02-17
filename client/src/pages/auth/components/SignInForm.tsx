@@ -20,13 +20,9 @@ import { useAppDispatch } from "@/app/hook";
 import { setCredentials } from "@/features/auth/authSlice";
 import { toast } from "sonner";
 import GithubIcon from "@/assets/Icons/GithubIcon";
+import { signInSchema } from "@/validators/authValidators";
 
-const schema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof signInSchema>;
 
 const SignInForm = ({
   className,
@@ -37,7 +33,7 @@ const SignInForm = ({
   const [login, { isLoading }] = useLoginMutation();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(signInSchema),
   });
 
   const onSubmit = (values: FormValues) => {
@@ -121,7 +117,7 @@ const SignInForm = ({
           </Button>
         </div>
         <div className="text-center text-sm">
-          Don&apos;t have an account?
+          Don&apos;t have an account?{" "}
           <Link
             to={AUTH_ROUTES.SIGN_UP}
             className="underline underline-offset-4"
