@@ -1,6 +1,8 @@
 import { Env } from "../config/env.config.js";
 import { FileLogger } from "./file-logger.js";
 
+const SEPARATOR: string = "\n" + "-".repeat(80);
+
 /**
  * Logging utility for consistent logging across the application.
  * Provides different log levels with file output.
@@ -44,12 +46,14 @@ export class Logger {
       ? ` [${this.currentRequestId}]`
       : "";
 
-    let logOutput = "-".repeat(80) + `\n[${timestamp}] ${level}${requestIdStr}: ${message}`;
+    let logOutput = `[${timestamp}] ${level}${requestIdStr}: ${message}`;
 
-    // Append metadata if present
-    if (metadata && Object.keys(metadata).length > 0) {
+    // Append metadata if present and has defined values
+    if (metadata && Object.keys(metadata).some(key => metadata[key] !== undefined)) {
       logOutput += "\n" + JSON.stringify(metadata, null, 2);
     }
+
+    logOutput += SEPARATOR;
 
     return logOutput;
   }
@@ -68,15 +72,15 @@ export class Logger {
       ? ` [${this.currentRequestId}]`
       : "";
 
-    let logOutput = "-".repeat(80) + `\n[${timestamp}] ERROR${requestIdStr}: ${message}`;
+    let logOutput = `[${timestamp}] ERROR${requestIdStr}: ${message}`;
 
     // Append error message if present
     if (errorMessage) {
       logOutput += `\n  Error: ${errorMessage}`;
     }
 
-    // Append metadata if present
-    if (metadata && Object.keys(metadata).length > 0) {
+    // Append metadata if present and has defined values
+    if (metadata && Object.keys(metadata).some(key => metadata[key] !== undefined)) {
       logOutput += "\n" + JSON.stringify(metadata, null, 2);
     }
 
@@ -84,6 +88,8 @@ export class Logger {
     if (stack) {
       logOutput += "\nStack Trace:\n" + stack;
     }
+
+    logOutput += SEPARATOR;
 
     return logOutput;
   }

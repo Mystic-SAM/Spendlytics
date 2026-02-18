@@ -1,7 +1,9 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AuthRoute from "./AuthRoute";
-import { authenticationRoutePaths } from "./common/routes";
+import { authenticationRoutePaths, protectedRoutePaths } from "./common/routes";
 import BaseLayout from "@/layouts/BaseLayout";
+import ProtectedRoute from "./ProtectedRoute";
+import AppLayout from "@/layouts/AppLayout";
 
 const AppRoutes = () => {
   return (
@@ -19,11 +21,24 @@ const AppRoutes = () => {
           </Route>
         </Route>
 
+        {/* Protected Route */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            {protectedRoutePaths.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={route.element}
+              />
+            ))}
+          </Route>
+        </Route>
+
         {/* Catch-all for undefined routes */}
         <Route path="*" element={<>404</>} />
       </Routes>
     </BrowserRouter>
   );
-}
+};
 
 export default AppRoutes;
