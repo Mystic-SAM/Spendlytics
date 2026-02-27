@@ -1,5 +1,8 @@
 import { addDays, addMonths, addWeeks, addYears, startOfMonth } from "date-fns";
-import { RecurringIntervalEnum, type RecurringInterval } from "../enums/model-enums.js";
+import {
+  RecurringIntervalEnum,
+  type RecurringInterval,
+} from "../enums/model-enums.js";
 import { format } from "date-fns";
 import { APP_CONSTANTS } from "../constants/constants.js";
 
@@ -9,7 +12,9 @@ import { APP_CONSTANTS } from "../constants/constants.js";
  * @returns The date adjusted to IST midnight
  */
 function setToISTMidnight(date: Date): Date {
-  const istDate = new Date(date.getTime() + APP_CONSTANTS.IST_OFFSET_MINUTES * 60 * 1000);
+  const istDate = new Date(
+    date.getTime() + APP_CONSTANTS.IST_OFFSET_MINUTES * 60 * 1000,
+  );
   istDate.setUTCHours(0, 0, 0, 0);
   return istDate;
 }
@@ -46,7 +51,7 @@ export function calculateNextReportDate(lastSentDate?: Date): Date {
  */
 export function calculateNextOccurrence(
   date: Date,
-  recurringInterval: RecurringInterval
+  recurringInterval: RecurringInterval,
 ): Date {
   const base = new Date(date);
   let nextDate: Date;
@@ -80,7 +85,7 @@ export function calculateNextOccurrence(
  */
 export function calculateNextEffectiveDate(
   startDate: Date,
-  interval: RecurringInterval
+  interval: RecurringInterval,
 ): Date {
   const now = new Date();
   const calculatedDate = calculateNextOccurrence(startDate, interval);

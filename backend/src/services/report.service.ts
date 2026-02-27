@@ -2,11 +2,10 @@ import { ReportModel } from "../models/report.model.js";
 import { NotFoundException } from "../utils/app-error.js";
 import { ReportSettingModel } from "../models/report-setting.model.js";
 import type { UpdateReportSettingType } from "../validators/report.validator.js";
-import { calculateNextReportDate } from "../utils/helper.js";
+import { calculateNextReportDate, formatDateRange } from "../utils/helper.js";
 import { TransactionModel } from "../models/transaction.model.js";
 import mongoose from "mongoose";
 import { TransactionTypeEnum } from "../enums/model-enums.js";
-import { format } from "date-fns";
 import { convertToINR } from "../utils/currency.js";
 import {
   GEN_AI_MODEL,
@@ -16,7 +15,6 @@ import {
 import { createUserContent } from "@google/genai";
 import { reportInsightPrompt } from "../utils/prompts.js";
 import { Logger } from "../utils/logger.js";
-import { enIN } from "date-fns/locale";
 
 export const getAllReportsService = async (
   userId: string,
@@ -255,7 +253,7 @@ export const generateReportService = async (
     totalInvestement,
   );
 
-  const periodLabel = `${format(fromDate, "PPP", { locale: enIN })} - ${format(toDate, "PPP", { locale: enIN })}`;
+  const periodLabel = formatDateRange(fromDate, toDate);
 
   const aiStartTime = Date.now();
   const insights = await generateInsightsAI({

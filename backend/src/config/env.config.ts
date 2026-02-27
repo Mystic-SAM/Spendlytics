@@ -15,6 +15,12 @@ const _Env = {
 
   JWT_SECRET: getEnv("JWT_SECRET"),
   JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN", "1h"),
+
+  GOOGLE_CLIENT_ID: getEnv("GOOGLE_CLIENT_ID"),
+  GOOGLE_CLIENT_SECRET: getEnv("GOOGLE_CLIENT_SECRET"),
+  GOOGLE_REFRESH_TOKEN: getEnv("GOOGLE_REFRESH_TOKEN"),
+  GOOGLE_REDIRECT_URI: getEnv("GOOGLE_REDIRECT_URI"),
+  GMAIL_SENDER: getEnv("GMAIL_SENDER"),
 } as const;
 
 export const Env = Object.freeze(_Env) as typeof _Env;
