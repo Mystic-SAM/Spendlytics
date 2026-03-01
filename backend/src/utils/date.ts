@@ -35,7 +35,6 @@ export const getDateRange = (
     value: DateRangeEnum.LAST_30_DAYS,
     label: "Last 30 Days",
   };
-  console.log(last30Days, "last30");
 
   switch (preset) {
     case DateRangeEnum.ALL_TIME:

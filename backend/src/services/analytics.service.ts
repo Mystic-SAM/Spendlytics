@@ -3,67 +3,38 @@ import {
   DateRangeEnum,
   type DateRangePreset,
 } from "../enums/date-range.enum.js";
-import mongoose from "mongoose";
 import { TransactionTypeEnum } from "../enums/model-enums.js";
 import { TransactionModel } from "../models/transaction.model.js";
 import { convertToINR } from "../utils/currency.js";
 import { differenceInDays, subDays, subYears } from "date-fns";
 import { getDateRange } from "../utils/date.js";
+import { Logger } from "../utils/logger.js";
+import {
+  buildDateRangeFilter,
+  buildPresetObject,
+  calculatePercentageChange,
+  createTransactionTypeSumStages,
+  extractAggregationResult,
+  isYearlyDateRange,
+  logAggregationResult,
+} from "../utils/analytics.utils.js";
 
-export const summaryAnalyticsService = async (
+/**
+ * Helper: Get current period summary statistics
+ */
+const getCurrentPeriodSummary = async (
   userId: string,
-  dateRangePreset?: DateRangePreset,
-  customFrom?: Date,
-  customTo?: Date,
-) => {
-  const range = getDateRange(dateRangePreset, customFrom, customTo);
-
-  const { from, to, value: rangeValue } = range;
+  from: Date | null,
+  to: Date | null,
+): Promise<Record<string, any> | undefined> => {
+  const filter = buildDateRangeFilter(userId, from, to);
 
   const currentPeriodPipeline: PipelineStage[] = [
-    {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        ...(from &&
-          to && {
-            date: {
-              $gte: from,
-              $lte: to,
-            },
-          }),
-      },
-    },
+    { $match: filter },
     {
       $group: {
         _id: null,
-        totalIncome: {
-          $sum: {
-            $cond: [
-              { $eq: ["$type", TransactionTypeEnum.INCOME] },
-              { $abs: "$amount" },
-              0,
-            ],
-          },
-        },
-        totalExpenses: {
-          $sum: {
-            $cond: [
-              { $eq: ["$type", TransactionTypeEnum.EXPENSE] },
-              { $abs: "$amount" },
-              0,
-            ],
-          },
-        },
-        totalInvestment: {
-          $sum: {
-            $cond: [
-              { $eq: ["$type", TransactionTypeEnum.INVESTMENT] },
-              { $abs: "$amount" },
-              0,
-            ],
-          },
-        },
-
+        ...createTransactionTypeSumStages(),
         transactionCount: { $sum: 1 },
       },
     },
@@ -143,25 +114,28 @@ export const summaryAnalyticsService = async (
   ];
 
   const [current] = await TransactionModel.aggregate(currentPeriodPipeline);
+  return current;
+};
 
-  const {
-    totalIncome = 0,
-    totalExpenses = 0,
-    totalInvestment = 0,
-    availableBalance = 0,
-    transactionCount = 0,
-    savingData = {
-      expenseRatio: 0,
-      savingsPercentage: 0,
-    },
-  } = current || {};
-
-  console.log(current, "current");
-
-  let percentageChange: any = {
+/**
+ * Helper: Calculate period-over-period comparison
+ */
+const calculatePeriodComparison = async (
+  userId: string,
+  from: Date | null,
+  to: Date | null,
+  rangeValue: DateRangePreset,
+  currentPeriodValues: {
+    totalIncome: number;
+    totalExpenses: number;
+    totalInvestment: number;
+    availableBalance: number;
+  },
+): Promise<Record<string, any>> => {
+  const defaultResult = {
     income: 0,
     expenses: 0,
-    investmnet: 0,
+    investment: 0,
     balance: 0,
     prevPeriodFrom: null,
     prevPeriodTo: null,
@@ -173,97 +147,137 @@ export const summaryAnalyticsService = async (
     },
   };
 
-  if (from && to && rangeValue !== DateRangeEnum.ALL_TIME) {
-    const period = differenceInDays(to, from) + 1;
-    console.log(`${differenceInDays(to, from)}`, period, "period");
-
-    const isYearly = [
-      DateRangeEnum.LAST_YEAR,
-      DateRangeEnum.THIS_YEAR,
-    ].includes(rangeValue);
-
-    const prevPeriodFrom = isYearly ? subYears(from, 1) : subDays(from, period);
-
-    const prevPeriodTo = isYearly ? subYears(to, 1) : subDays(to, period);
-    console.log(prevPeriodFrom, prevPeriodTo, "Prev date");
-
-    const prevPeriodPipeline = [
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
-          date: {
-            $gte: prevPeriodFrom,
-            $lte: prevPeriodTo,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalIncome: {
-            $sum: {
-              $cond: [
-                { $eq: ["$type", TransactionTypeEnum.INCOME] },
-                { $abs: "$amount" },
-                0,
-              ],
-            },
-          },
-          totalExpenses: {
-            $sum: {
-              $cond: [
-                { $eq: ["$type", TransactionTypeEnum.EXPENSE] },
-                { $abs: "$amount" },
-                0,
-              ],
-            },
-          },
-          totalInvestment: {
-            $sum: {
-              $cond: [
-                { $eq: ["$type", TransactionTypeEnum.INVESTMENT] },
-                { $abs: "$amount" },
-                0,
-              ],
-            },
-          },
-        },
-      },
-    ];
-
-    const [previous] = await TransactionModel.aggregate(prevPeriodPipeline);
-
-    console.log(previous, "Prvious Data");
-    if (previous) {
-      const prevIncome = previous.totalIncome || 0;
-      const prevExpenses = previous.totalExpenses || 0;
-      const prevInvestment = previous.totalInvestment || 0;
-      const prevBalance = prevIncome - (prevExpenses + prevInvestment);
-
-      const currentIncome = totalIncome;
-      const currentExpenses = totalExpenses;
-      const currentInvestment = totalInvestment;
-      const currentBalance = availableBalance;
-
-      percentageChange = {
-        income: calaulatePercentageChange(prevIncome, currentIncome),
-        expenses: calaulatePercentageChange(prevExpenses, currentExpenses),
-        investment: calaulatePercentageChange(
-          prevInvestment,
-          currentInvestment,
-        ),
-        balance: calaulatePercentageChange(prevBalance, currentBalance),
-        prevPeriodFrom: prevPeriodFrom,
-        prevPeriodTo: prevPeriodTo,
-        previousValues: {
-          incomeAmount: prevIncome,
-          expenseAmount: prevExpenses,
-          investmentAmount: prevInvestment,
-          balanceAmount: prevBalance,
-        },
-      };
-    }
+  if (!from || !to || rangeValue === DateRangeEnum.ALL_TIME) {
+    Logger.debug("Skipping period comparison for ALL_TIME or missing dates");
+    return defaultResult;
   }
+
+  const period = differenceInDays(to, from) + 1;
+  const isYearly = isYearlyDateRange(rangeValue);
+  const prevPeriodFrom = isYearly ? subYears(from, 1) : subDays(from, period);
+  const prevPeriodTo = isYearly ? subYears(to, 1) : subDays(to, period);
+
+  Logger.debug("Calculating previous period comparison", {
+    currentFrom: from,
+    currentTo: to,
+    prevFrom: prevPeriodFrom,
+    prevTo: prevPeriodTo,
+    isYearly,
+  });
+
+  const previousPeriodData = await getPreviousPeriodSummary(
+    userId,
+    prevPeriodFrom,
+    prevPeriodTo,
+  );
+
+  if (!previousPeriodData) {
+    Logger.debug("No data found for previous period");
+    return defaultResult;
+  }
+
+  const prevIncome = previousPeriodData.totalIncome || 0;
+  const prevExpenses = previousPeriodData.totalExpenses || 0;
+  const prevInvestment = previousPeriodData.totalInvestment || 0;
+  const prevBalance = prevIncome - (prevExpenses + prevInvestment);
+
+  return {
+    income: calculatePercentageChange(
+      prevIncome,
+      currentPeriodValues.totalIncome,
+    ),
+    expenses: calculatePercentageChange(
+      prevExpenses,
+      currentPeriodValues.totalExpenses,
+    ),
+    investment: calculatePercentageChange(
+      prevInvestment,
+      currentPeriodValues.totalInvestment,
+    ),
+    balance: calculatePercentageChange(
+      prevBalance,
+      currentPeriodValues.availableBalance,
+    ),
+    prevPeriodFrom,
+    prevPeriodTo,
+    previousValues: {
+      incomeAmount: prevIncome,
+      expenseAmount: prevExpenses,
+      investmentAmount: prevInvestment,
+      balanceAmount: prevBalance,
+    },
+  };
+};
+
+/**
+ * Helper: Get previous period summary data
+ */
+const getPreviousPeriodSummary = async (
+  userId: string,
+  prevPeriodFrom: Date,
+  prevPeriodTo: Date,
+): Promise<Record<string, any> | undefined> => {
+  const filter = buildDateRangeFilter(userId, prevPeriodFrom, prevPeriodTo);
+
+  const prevPeriodPipeline: PipelineStage[] = [
+    { $match: filter },
+    {
+      $group: {
+        _id: null,
+        ...createTransactionTypeSumStages(),
+      },
+    },
+  ];
+
+  const [previous] = await TransactionModel.aggregate(prevPeriodPipeline);
+  return previous;
+};
+
+/**
+ * Fetch summary analytics for a given date range
+ * Includes current period stats and period-over-period comparison
+ */
+export const summaryAnalyticsService = async (
+  userId: string,
+  dateRangePreset?: DateRangePreset,
+  customFrom?: Date,
+  customTo?: Date,
+) => {
+  Logger.info(`Executing summary analytics query`, {
+    userId,
+    dateRange: dateRangePreset || "unspecified",
+  });
+  const range = getDateRange(dateRangePreset, customFrom, customTo);
+
+  const { from, to, value: rangeValue } = range;
+
+  const currentPeriodData = await getCurrentPeriodSummary(userId, from, to);
+  logAggregationResult("currentPeriod", 1, { rangeValue });
+
+  const {
+    totalIncome,
+    totalExpenses,
+    totalInvestment,
+    availableBalance,
+    transactionCount,
+    savingData,
+  } = extractAggregationResult(currentPeriodData, {
+    availableBalance: 0,
+    transactionCount: 0,
+  });
+
+  const percentageChange = await calculatePeriodComparison(
+    userId,
+    from,
+    to,
+    rangeValue,
+    {
+      totalIncome,
+      totalExpenses,
+      totalInvestment,
+      availableBalance,
+    },
+  );
 
   return {
     availableBalance: convertToINR(availableBalance),
@@ -292,35 +306,17 @@ export const summaryAnalyticsService = async (
         ),
       },
     },
-    preset: {
-      ...range,
-      value: rangeValue || DateRangeEnum.ALL_TIME,
-      label: range?.label || "All Time",
-    },
+    preset: buildPresetObject(range, DateRangeEnum.ALL_TIME),
   };
 };
 
-export const chartAnalyticsService = async (
-  userId: string,
-  dateRangePreset?: DateRangePreset,
-  customFrom?: Date,
-  customTo?: Date,
-) => {
-  const range = getDateRange(dateRangePreset, customFrom, customTo);
-  const { from, to, value: rangeValue } = range;
-
-  const filter: any = {
-    userId: new mongoose.Types.ObjectId(userId),
-    ...(from &&
-      to && {
-        date: {
-          $gte: from,
-          $lte: to,
-        },
-      }),
-  };
-
-  const result = await TransactionModel.aggregate([
+/**
+ * Helper: Build aggregation pipeline for chart data
+ */
+const buildChartAggregationPipeline = (
+  filter: Record<string, any>,
+): PipelineStage[] => {
+  return [
     { $match: filter },
     //Group the transaction by date (YYYY-MM-DD)
     {
@@ -331,37 +327,7 @@ export const chartAnalyticsService = async (
             date: "$date",
           },
         },
-
-        income: {
-          $sum: {
-            $cond: [
-              { $eq: ["$type", TransactionTypeEnum.INCOME] },
-              { $abs: "$amount" },
-              0,
-            ],
-          },
-        },
-
-        expenses: {
-          $sum: {
-            $cond: [
-              { $eq: ["$type", TransactionTypeEnum.EXPENSE] },
-              { $abs: "$amount" },
-              0,
-            ],
-          },
-        },
-
-        investment: {
-          $sum: {
-            $cond: [
-              { $eq: ["$type", TransactionTypeEnum.INVESTMENT] },
-              { $abs: "$amount" },
-              0,
-            ],
-          },
-        },
-
+        ...createTransactionTypeSumStages(),
         incomeCount: {
           $sum: {
             $cond: [{ $eq: ["$type", TransactionTypeEnum.INCOME] }, 1, 0],
@@ -416,11 +382,35 @@ export const chartAnalyticsService = async (
         totalInvestmentCount: 1,
       },
     },
-  ]);
+  ];
+};
+
+/**
+ * Fetch chart analytics data grouped by date
+ * Shows daily transaction summaries for the given period
+ */
+export const chartAnalyticsService = async (
+  userId: string,
+  dateRangePreset?: DateRangePreset,
+  customFrom?: Date,
+  customTo?: Date,
+) => {
+  Logger.info(`Executing chart analytics query`, {
+    userId,
+    dateRange: dateRangePreset || "unspecified",
+  });
+  const range = getDateRange(dateRangePreset, customFrom, customTo);
+  const { from, to, value: rangeValue } = range;
+
+  const filter = buildDateRangeFilter(userId, from, to);
+
+  const chartPipeline = buildChartAggregationPipeline(filter);
+  const result = await TransactionModel.aggregate(chartPipeline);
+  logAggregationResult("chartData", result.length);
 
   const resultData = result[0] || {};
 
-  const transaformedData = (resultData?.chartData || []).map((item: any) => ({
+  const transformedData = (resultData?.chartData || []).map((item: any) => ({
     date: item.date,
     income: convertToINR(item.income),
     expenses: convertToINR(item.expenses),
@@ -428,51 +418,29 @@ export const chartAnalyticsService = async (
   }));
 
   return {
-    chartData: transaformedData,
-    totalIncomeCount: resultData.totalIncomeCount,
-    totalExpenseCount: resultData.totalExpenseCount,
-    totalInvestmentCount: resultData.totalInvestmentCount,
-    preset: {
-      ...range,
-      value: rangeValue || DateRangeEnum.ALL_TIME,
-      label: range?.label || "All Time",
-    },
+    chartData: transformedData,
+    totalIncomeCount: resultData.totalIncomeCount || 0,
+    totalExpenseCount: resultData.totalExpenseCount || 0,
+    totalInvestmentCount: resultData.totalInvestmentCount || 0,
+    preset: buildPresetObject(range, DateRangeEnum.ALL_TIME),
   };
 };
 
-export const expensePieChartBreakdownService = async (
-  userId: string,
-  dateRangePreset?: DateRangePreset,
-  customFrom?: Date,
-  customTo?: Date,
-) => {
-  const range = getDateRange(dateRangePreset, customFrom, customTo);
-  const { from, to, value: rangeValue } = range;
-
-  const filter: any = {
-    userId: new mongoose.Types.ObjectId(userId),
-    type: TransactionTypeEnum.EXPENSE,
-    ...(from &&
-      to && {
-        date: {
-          $gte: from,
-          $lte: to,
-        },
-      }),
-  };
-
-  const pipleline: PipelineStage[] = [
-    {
-      $match: filter,
-    },
+/**
+ * Helper: Build aggregation pipeline for expense breakdown
+ */
+const buildExpenseBreakdownPipeline = (
+  filter: Record<string, any>,
+): PipelineStage[] => {
+  return [
+    { $match: filter },
     {
       $group: {
         _id: "$category",
         value: { $sum: { $abs: "$amount" } },
       },
     },
-    { $sort: { value: -1 } }, //
-
+    { $sort: { value: -1 } },
     {
       $facet: {
         topThree: [{ $limit: 3 }],
@@ -511,7 +479,6 @@ export const expensePieChartBreakdownService = async (
         _id: 0,
         totalSpent: 1,
         breakdown: {
-          // .map((cat: any)=> )
           $map: {
             input: "$breakdown",
             as: "cat",
@@ -541,13 +508,41 @@ export const expensePieChartBreakdownService = async (
       },
     },
   ];
+};
 
-  const result = await TransactionModel.aggregate(pipleline);
+/**
+ * Fetch expense breakdown by category (pie chart data)
+ * Shows top 3 categories and groups remaining as "others"
+ */
+export const expensePieChartBreakdownService = async (
+  userId: string,
+  dateRangePreset?: DateRangePreset,
+  customFrom?: Date,
+  customTo?: Date,
+) => {
+  Logger.info(`Executing Expense Breakdown analytics query`, {
+    userId,
+    dateRange: dateRangePreset || "unspecified",
+  });
+  const range = getDateRange(dateRangePreset, customFrom, customTo);
+  const { from, to, value: rangeValue } = range;
+
+  const filter = buildDateRangeFilter(
+    userId,
+    from,
+    to,
+    TransactionTypeEnum.EXPENSE,
+  );
+
+  const pipeline = buildExpenseBreakdownPipeline(filter);
+  const result = await TransactionModel.aggregate(pipeline);
+  logAggregationResult("expenseBreakdown", result.length);
 
   const data = result[0] || {
     totalSpent: 0,
     breakdown: [],
   };
+
   const transformedData = {
     totalSpent: convertToINR(data.totalSpent),
     breakdown: data.breakdown.map((item: any) => ({
@@ -558,17 +553,6 @@ export const expensePieChartBreakdownService = async (
 
   return {
     ...transformedData,
-    preset: {
-      ...range,
-      value: rangeValue || DateRangeEnum.ALL_TIME,
-      label: range?.label || "All Time",
-    },
+    preset: buildPresetObject(range, DateRangeEnum.ALL_TIME),
   };
 };
-
-function calaulatePercentageChange(previous: number, current: number) {
-  if (previous === 0) return current === 0 ? 0 : 100;
-  const changes = ((current - previous) / Math.abs(previous)) * 100;
-  const cappedChange = Math.min(Math.max(changes, -100), 100);
-  return parseFloat(cappedChange.toFixed(2));
-}
