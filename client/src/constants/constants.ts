@@ -12,6 +12,7 @@ export const CATEGORIES = [
   { value: "healthcare", label: "Healthcare" },
   { value: "utilities", label: "Utilities" },
   { value: "Income", label: "Income" },
+  { value: "Investment", label: "Investment" },
   { value: "other", label: "Other" },
 ];
 

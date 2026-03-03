@@ -18,6 +18,14 @@ export interface CreateTransactionBody {
   paymentMethod: string;
 }
 
+export interface GetAllTransactionParams {
+  keyword?: string;
+  type?: TransactionCategoryType;
+  recurringStatus?: "RECURRING" | "NON_RECURRING";
+  pageNumber?: number;
+  pageSize?: number;
+}
+
 export interface TransactionType {
   _id: string;
   userId: string;
@@ -36,4 +44,16 @@ export interface TransactionType {
   createdAt: string;
   updatedAt: string;
   id?: string;
+}
+
+export interface GetAllTransactionResponse {
+  message: string;
+  transactions: TransactionType[];
+  pagination: {
+    pageSize: number;
+    pageNumber: number;
+    totalCount: number;
+    totalPages: number;
+    skip: number;
+  };
 }

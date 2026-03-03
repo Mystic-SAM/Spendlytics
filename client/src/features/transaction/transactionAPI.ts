@@ -1,5 +1,5 @@
 import { apiClient } from "@/app/apiClient";
-import type { CreateTransactionBody } from "./transactionTypes";
+import type { CreateTransactionBody, GetAllTransactionParams, GetAllTransactionResponse } from "./transactionTypes";
 
 export const transactionApi = apiClient.injectEndpoints({
   endpoints: (builder) => ({
@@ -11,7 +11,26 @@ export const transactionApi = apiClient.injectEndpoints({
       }),
       invalidatesTags: ["transactions", "analytics"],
     }),
+
+    getAllTransactions: builder.query<GetAllTransactionResponse, GetAllTransactionParams>({
+      query: (params) => {
+        const { keyword = undefined, type = undefined, recurringStatus = undefined, pageNumber = 1, pageSize = 10 } = params;
+
+        return ({
+          url: "/transaction/all",
+          method: "GET",
+          params: {
+            keyword,
+            type,
+            recurringStatus,
+            pageNumber,
+            pageSize,
+          },
+        })
+      },
+      providesTags: ["transactions"],
+    }),
   }),
 });
 
-export const { useCreateTransactionMutation } = transactionApi;
+export const { useCreateTransactionMutation, useGetAllTransactionsQuery } = transactionApi;
