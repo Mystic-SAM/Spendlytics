@@ -1,3 +1,6 @@
+export const MAX_IMPORT_LIMIT = 300;
+export const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 export const MIN_TRANSACTION_DATE = new Date("2026-01-01");
 
 export const CATEGORIES = [

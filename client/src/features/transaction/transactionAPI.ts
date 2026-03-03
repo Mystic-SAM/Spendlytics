@@ -1,5 +1,6 @@
 import { apiClient } from "@/app/apiClient";
 import type {
+  BulkImportTransactionPayload,
   CreateTransactionBody,
   GetAllTransactionParams,
   GetAllTransactionResponse,
@@ -85,6 +86,17 @@ export const transactionApi = apiClient.injectEndpoints({
       }),
       invalidatesTags: ["transactions", "analytics"],
     }),
+
+    bulkImportTransaction: builder.mutation<void, BulkImportTransactionPayload>(
+      {
+        query: (body) => ({
+          url: "/transaction/bulk-insert",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: ["transactions"],
+      },
+    ),
   }),
 });
 
@@ -96,4 +108,5 @@ export const {
   useUpdateTransactionMutation,
   useDeleteTransactionMutation,
   useBulkDeleteTransactionMutation,
+  useBulkImportTransactionMutation,
 } = transactionApi;

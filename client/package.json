@@ -27,6 +27,7 @@
     "react-day-picker": "^9.13.2",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
+    "react-papaparse": "^4.4.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.13.0",
     "redux-persist": "^6.0.0",

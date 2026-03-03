@@ -1,5 +1,6 @@
 import PageLayout from "@/components/PageLayout";
 import AddTransactionDrawer from "@/components/transaction/AddTransactionDrawer";
+import ImportTransactionModal from "@/components/transaction/import-transaction/ImportTransactionModal";
 import TransactionTable from "@/components/transaction/transaction-table/TransactionTable";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -11,6 +12,7 @@ export default function Transactions() {
       addMarginTop
       rightAction={
         <div className="flex items-center gap-2">
+          <ImportTransactionModal />
           <AddTransactionDrawer />
         </div>
       }
