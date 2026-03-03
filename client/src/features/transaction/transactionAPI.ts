@@ -4,7 +4,7 @@ import type {
   GetAllTransactionParams,
   GetAllTransactionResponse,
   GetSingleTransactionResponse,
-  UpdateTransactionPayload
+  UpdateTransactionPayload,
 } from "./transactionTypes";
 
 export const transactionApi = apiClient.injectEndpoints({
@@ -20,9 +20,15 @@ export const transactionApi = apiClient.injectEndpoints({
 
     getAllTransactions: builder.query<GetAllTransactionResponse, GetAllTransactionParams>({
       query: (params) => {
-        const { keyword = undefined, type = undefined, recurringStatus = undefined, pageNumber = 1, pageSize = 10 } = params;
+        const {
+          keyword = undefined,
+          type = undefined,
+          recurringStatus = undefined,
+          pageNumber = 1,
+          pageSize = 10,
+        } = params;
 
-        return ({
+        return {
           url: "/transaction/all",
           method: "GET",
           params: {
@@ -32,7 +38,7 @@ export const transactionApi = apiClient.injectEndpoints({
             pageNumber,
             pageSize,
           },
-        })
+        };
       },
       providesTags: ["transactions"],
     }),
@@ -44,6 +50,14 @@ export const transactionApi = apiClient.injectEndpoints({
       }),
     }),
 
+    duplicateTransaction: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/transaction/duplicate/${id}`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["transactions"],
+    }),
+
     updateTransaction: builder.mutation<void, UpdateTransactionPayload>({
       query: ({ id, transaction }) => ({
         url: `/transaction/update/${id}`,
@@ -53,6 +67,24 @@ export const transactionApi = apiClient.injectEndpoints({
       invalidatesTags: ["transactions"],
     }),
 
+    deleteTransaction: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/transaction/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["transactions", "analytics"],
+    }),
+
+    bulkDeleteTransaction: builder.mutation<void, string[]>({
+      query: (transactionIds) => ({
+        url: "/transaction/bulk-delete",
+        method: "DELETE",
+        body: {
+          transactionIds,
+        },
+      }),
+      invalidatesTags: ["transactions", "analytics"],
+    }),
   }),
 });
 
@@ -60,5 +92,8 @@ export const {
   useCreateTransactionMutation,
   useGetAllTransactionsQuery,
   useGetSingleTransactionQuery,
+  useDuplicateTransactionMutation,
   useUpdateTransactionMutation,
+  useDeleteTransactionMutation,
+  useBulkDeleteTransactionMutation,
 } = transactionApi;

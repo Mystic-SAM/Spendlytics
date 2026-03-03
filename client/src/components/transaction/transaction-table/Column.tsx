@@ -25,6 +25,8 @@ import { PAYMENT_METHODS, TRANSACTION_CATEGORY, TRANSACTION_FREQUENCY } from "@/
 import type { TransactionType } from "@/features/transaction/transactionTypes";
 import { cn } from "@/lib/utils";
 import useEditTransactionDrawer from "@/hooks/useEditTransactionDrawer";
+import { useDeleteTransactionMutation, useDuplicateTransactionMutation } from "@/features/transaction/transactionAPI";
+import { toast } from "sonner";
 
 type FrequencyInfo = {
   label: string;
@@ -57,19 +59,19 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Date Created
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => format(row.getValue("createdAt"), "MMM dd, yyyy"),
-  },
+  // {
+  //   accessorKey: "createdAt",
+  //   header: ({ column }) => (
+  //     <Button
+  //       variant="ghost"
+  //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  //     >
+  //       Date Created
+  //       <ArrowUpDown className="ml-2 h-4 w-4" />
+  //     </Button>
+  //   ),
+  //   cell: ({ row }) => format(row.getValue("createdAt"), "MMM dd, yyyy"),
+  // },
   {
     accessorKey: "title",
     header: "Title",
@@ -156,13 +158,14 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     header: ({ column }) => (
       <Button
         variant="ghost"
+        className="w-full"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Transaction Date
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => format(row.original.date, "MMM dd, yyyy"),
+    cell: ({ row }) => <div className="text-center">{format(row.original.date, "MMM dd, yyyy")}</div>,
   },
   {
     accessorKey: "paymentMethod",
@@ -232,19 +235,29 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
 const ActionsCell = ({ row }: { row: any }) => {
   const transactionId = row.original.id;
   const { onOpenDrawer } = useEditTransactionDrawer();
-
-  const isDeleting = true
-  const isDuplicating = false
+  const [duplicateTransaction, { isLoading: isDuplicating }] = useDuplicateTransactionMutation();
+  const [deleteTransaction, { isLoading: isDeleting }] = useDeleteTransactionMutation();
 
   const handleDuplicate = (e: Event) => {
     e.preventDefault();
     if (isDuplicating) return;
+    duplicateTransaction(transactionId).unwrap().then(() => {
+      toast.success("Transaction duplicated successfully");
+    }).catch((error) => {
+      toast.error(error.data?.message || "Failed to duplicate transaction");
+    });
 
   }
 
   const handleDelete = (e: Event) => {
     e.preventDefault();
     if (isDeleting) return;
+    deleteTransaction(transactionId).unwrap().then(() => {
+      toast.success("Transaction deleted successfully");
+    }).catch((error) => {
+      toast.error(error.data?.message || "Failed to delete transaction");
+    });
+
   }
 
   return (

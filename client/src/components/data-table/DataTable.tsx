@@ -222,7 +222,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
                   {group.headers.map((header: any) => (
                     <TableHead
                       key={header.id}
-                      className="!font-medium !text-[13px]"
+                      className="font-medium text-[14px]"
                     >
                       {flexRender(
                         header.column.columnDef.header,
@@ -241,7 +241,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell: any) => (
-                      <TableCell key={cell.id} className="!text-[13.3px]">
+                      <TableCell key={cell.id} className="text-[14px] max-w-[200px]">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

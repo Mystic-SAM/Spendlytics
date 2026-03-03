@@ -1,13 +1,14 @@
 import { DataTable } from "@/components/data-table/DataTable";
 import { TRANSACTION_CATEGORY, type RecurringStatusType, type TransactionCategoryType } from "@/constants/constants";
-import { useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
+import { useBulkDeleteTransactionMutation, useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
 import useDebouncedSearch from "@/hooks/useDebounceSearch";
 import { useState } from "react";
 import { transactionColumns } from "./Column";
+import { toast } from "sonner";
 
 type FilterType = {
   type?: TransactionCategoryType | undefined;
-  recurringStatus?: "RECURRING" | "NON_RECURRING" | undefined;
+  recurringStatus?: RecurringStatusType | undefined;
   pageNumber?: number;
   pageSize?: number;
 };
@@ -26,6 +27,9 @@ const TransactionTable = (props: {
   const { debouncedTerm, setSearchTerm } = useDebouncedSearch("", {
     delay: 500,
   });
+
+  const [bulkDeleteTransaction, { isLoading: isBulkDeleting }] =
+    useBulkDeleteTransactionMutation();
 
   const { data, isFetching } = useGetAllTransactionsQuery({
     keyword: debouncedTerm,
@@ -46,7 +50,6 @@ const TransactionTable = (props: {
 
 
   const handleSearch = (value: string) => {
-    console.log(debouncedTerm);
     setSearchTerm(value);
   };
 
@@ -70,6 +73,15 @@ const TransactionTable = (props: {
 
   const handleBulkDelete = (transactionIds: string[]) => {
     console.log(transactionIds);
+
+    bulkDeleteTransaction(transactionIds)
+      .unwrap()
+      .then(() => {
+        toast.success("Transactions deleted successfully");
+      })
+      .catch((error) => {
+        toast.error(error.data?.message || "Failed to delete transactions");
+      });
   };
 
   return (
@@ -78,7 +90,7 @@ const TransactionTable = (props: {
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={isFetching}
-      isBulkDeleting={false}
+      isBulkDeleting={isBulkDeleting}
       isShowPagination={props.isShowPagination}
       pagination={pagination}
       filters={[
@@ -88,6 +100,7 @@ const TransactionTable = (props: {
           options: [
             { value: TRANSACTION_CATEGORY.INCOME, label: "Income" },
             { value: TRANSACTION_CATEGORY.EXPENSE, label: "Expense" },
+            { value: TRANSACTION_CATEGORY.INVESTMENT, label: "Investment" },
           ],
         },
         {
