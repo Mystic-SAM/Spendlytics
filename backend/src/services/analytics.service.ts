@@ -354,9 +354,9 @@ const buildChartAggregationPipeline = (
       $project: {
         _id: 0,
         date: "$_id",
-        income: 1,
-        expenses: 1,
-        investment: 1,
+        totalIncome: 1,
+        totalExpenses: 1,
+        totalInvestment: 1,
         incomeCount: 1,
         expenseCount: 1,
         investmentCount: 1,
@@ -412,9 +412,9 @@ export const chartAnalyticsService = async (
 
   const transformedData = (resultData?.chartData || []).map((item: any) => ({
     date: item.date,
-    income: convertToINR(item.income),
-    expenses: convertToINR(item.expenses),
-    investment: convertToINR(item.investment),
+    income: convertToINR(item.totalIncome),
+    expenses: convertToINR(item.totalExpenses),
+    investment: convertToINR(item.totalInvestment),
   }));
 
   return {
