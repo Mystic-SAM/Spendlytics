@@ -37,3 +37,33 @@ export interface SummaryAnalyticsResponse {
     preset: PresetType;
   }
 }
+
+export interface ChartAnalyticsResponse {
+  message: string;
+  data: {
+    chartData: {
+      date: string;
+      income: number;
+      expenses: number;
+      investment: number;
+    }[];
+    totalIncomeCount: number;
+    totalExpenseCount: number;
+    totalInvestmentCount: number;
+    preset: PresetType;
+  }
+}
+
+
+export interface ExpensePieChartBreakdownResponse {
+  message: string;
+  data: {
+    totalSpent: number;
+    breakdown: {
+      name: string;
+      value: number;
+      percentage: number;
+    }[];
+    preset: PresetType;
+  }
+}
