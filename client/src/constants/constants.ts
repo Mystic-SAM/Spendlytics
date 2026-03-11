@@ -89,3 +89,5 @@ export const REPORT_STATUS = {
 } as const;
 
 export type ReportStatusType = keyof typeof REPORT_STATUS;
+
+export type ThemeType = "dark" | "light" | "system";

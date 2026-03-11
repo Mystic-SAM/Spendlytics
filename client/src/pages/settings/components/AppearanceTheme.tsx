@@ -1,15 +1,20 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { useTheme } from "@/context/ThemeProvider"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import type { ThemeType } from "@/constants/constants"
 
 const AppearanceTheme = () => {
   const { theme, setTheme } = useTheme();
 
-  const [selectedTheme, setSelectedTheme] = useState(theme);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeType>(theme);
 
-  const handleThemeChange = (value: "light" | "dark") => {
+  useEffect(() => {
+    setSelectedTheme(theme);
+  }, [theme]);
+
+  const handleThemeChange = (value: ThemeType) => {
     setSelectedTheme(value);
   }
 
@@ -27,7 +32,7 @@ const AppearanceTheme = () => {
         <RadioGroup
           value={selectedTheme}
           onValueChange={handleThemeChange}
-          className="flex flex-col md:flex-row items-start md:items-center gap-5 max-w-md pt-2"
+          className="flex flex-col md:flex-row items-start md:items-center gap-5 pt-2"
         >
           <div>
             <Label className="flex flex-col [&:has([data-state=checked])>div]:border-primary">
@@ -74,6 +79,57 @@ const AppearanceTheme = () => {
               </div>
               <p className="block w-full p-2 text-center font-normal">
                 Dark
+              </p>
+            </Label>
+          </div>
+          <div>
+            <Label className="flex flex-col [&:has([data-state=checked])>div]:border-primary">
+              <RadioGroupItem value="system" className="sr-only" />
+
+              <div className="items-center rounded-md border-2 border-muted bg-popover p-1 hover:bg-accent hover:text-accent-foreground">
+                <div className="grid grid-cols-2 gap-1 rounded-sm">
+
+                  {/* Light preview */}
+                  <div className="space-y-2 rounded-sm bg-slate-100 p-2">
+                    <div className="space-y-2 rounded-md bg-white p-2 shadow-sm">
+                      <div className="h-2 w-[30px] rounded-lg bg-slate-300" />
+                      <div className="h-2 w-[40px] rounded-lg bg-slate-300" />
+                    </div>
+
+                    <div className="flex items-center space-x-2 rounded-md bg-white p-2 shadow-sm">
+                      <div className="h-4 w-2 rounded-full bg-slate-300" />
+                      <div className="h-2 w-[20px] rounded-lg bg-slate-300" />
+                    </div>
+
+                    <div className="flex items-center space-x-2 rounded-md bg-white p-2 shadow-sm">
+                      <div className="h-4 w-2 rounded-full bg-slate-300" />
+                      <div className="h-2 w-[20px] rounded-lg bg-slate-300" />
+                    </div>
+                  </div>
+
+                  {/* Dark preview */}
+                  <div className="space-y-2 rounded-sm bg-slate-950 p-2">
+                    <div className="space-y-2 rounded-md bg-slate-800 p-2 shadow-sm">
+                      <div className="h-2 w-[30px] rounded-lg bg-slate-400" />
+                      <div className="h-2 w-[40px] rounded-lg bg-slate-400" />
+                    </div>
+
+                    <div className="flex items-center space-x-2 rounded-md bg-slate-800 p-2 shadow-sm">
+                      <div className="h-4 w-2 rounded-full bg-slate-400" />
+                      <div className="h-2 w-[20px] rounded-lg bg-slate-400" />
+                    </div>
+
+                    <div className="flex items-center space-x-2 rounded-md bg-slate-800 p-2 shadow-sm">
+                      <div className="h-4 w-2 rounded-full bg-slate-400" />
+                      <div className="h-2 w-[20px] rounded-lg bg-slate-400" />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <p className="block w-full p-2 text-center font-normal">
+                System
               </p>
             </Label>
           </div>

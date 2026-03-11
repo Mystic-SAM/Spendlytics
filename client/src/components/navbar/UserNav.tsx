@@ -25,6 +25,7 @@ const UserNav = ({ userName, profilePicture, onLogout }: {
       <Button
         variant="ghost"
         className="relative !bg-transparent rounded-full !gap-0"
+        aria-label="User Profile Menu"
       >
         <Avatar className="h-10 w-10 !cursor-pointer ">
           <AvatarImage

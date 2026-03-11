@@ -3,7 +3,7 @@ import AppRoutes from "./routes/AppRoutes.tsx";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+    <ThemeProvider storageKey="vite-ui-theme">
       <AppRoutes />
     </ThemeProvider>
   );

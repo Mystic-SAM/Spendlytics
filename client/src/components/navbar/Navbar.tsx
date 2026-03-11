@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Sun, Moon, Monitor } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { PROTECTED_ROUTES } from "@/routes/common/routePath";
-import { cn } from "@/lib/utils";
+import { capitalizeFirstLetter, cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Sheet, SheetContent } from "../ui/sheet";
 import UserNav from "./UserNav";
 import LogoutDialog from "./LogoutDialog";
 import { useTypedSelector } from "@/app/hook";
+import { useTheme } from "@/context/ThemeProvider";
 import Logo from "../ui/Logo/Logo";
 
 const Navbar = () => {
   const { pathname } = useLocation();
   const { user } = useTypedSelector((state) => state.auth);
+  const { theme, setTheme } = useTheme();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
@@ -113,6 +115,26 @@ const Navbar = () => {
 
             {/* Right side - User actions */}
             <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="!bg-white/10 !text-white hover:!bg-white/20 !cursor-pointer"
+                onClick={() =>
+                  setTheme(
+                    theme === "light" ? "dark" : theme === "dark" ? "system" : "light"
+                  )
+                }
+                title={capitalizeFirstLetter(theme)}
+                aria-label="Toggle theme"
+                aria-describedby="active-theme"
+              >
+                {theme === "light" && <Sun className="h-5 w-5" />}
+                {theme === "dark" && <Moon className="h-5 w-5" />}
+                {theme === "system" && <Monitor className="h-5 w-5" />}
+                <span id="active-theme" className="sr-only">Active Theme is {capitalizeFirstLetter(theme)}</span>
+              </Button>
+
               <UserNav
                 userName={user?.name || ""}
                 profilePicture={user?.profilePicture || ""}
