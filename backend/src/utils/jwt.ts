@@ -23,6 +23,11 @@ const accessTokenSignOptions: SignOptsAndSecret = {
   secret: Env.JWT_SECRET,
 };
 
+const refreshTokenSignOptions: SignOptsAndSecret = {
+  expiresIn: Env.JWT_REFRESH_EXPIRES_IN as TimeString,
+  secret: Env.JWT_REFRESH_SECRET,
+};
+
 export const signJwtToken = (
   payload: AccessTokenPayload,
   options?: SignOptsAndSecret
@@ -50,4 +55,27 @@ export const signJwtToken = (
     token,
     expiresAt,
   };
+};
+
+/**
+ * Signs a refresh token with the dedicated refresh secret and expiry.
+ */
+export const signRefreshToken = (payload: AccessTokenPayload): string => {
+  const { token } = signJwtToken(payload, refreshTokenSignOptions);
+  return token;
+};
+
+/**
+ * Verifies a JWT token against the given secret.
+ * Returns the decoded payload on success, or null on failure (expired, tampered, etc.).
+ */
+export const verifyJwtToken = <T extends object>(
+  token: string,
+  secret: string,
+): T | null => {
+  try {
+    return jwt.verify(token, secret) as T;
+  } catch {
+    return null;
+  }
 };

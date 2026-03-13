@@ -2,10 +2,10 @@ import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui
 import { DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { Loader } from "lucide-react";
 import { Button } from "../ui/button";
-import { useTransition } from "react";
 import { useAppDispatch } from "@/app/hook";
 import { logout } from "@/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import { useLogoutMutation } from "@/features/auth/authAPI";
 import { AUTH_ROUTES } from "@/routes/common/routePath";
 
 interface LogoutDialogProps {
@@ -14,16 +14,20 @@ interface LogoutDialogProps {
 }
 
 const LogoutDialog = ({ isOpen, setIsOpen }: LogoutDialogProps) => {
-  const [isPending, startTransition] = useTransition();
+  const [logoutApi, { isLoading: isPending }] = useLogoutMutation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    startTransition(() => {
-      setIsOpen(false);
+  const handleLogout = async () => {
+    try {
+      await logoutApi({}).unwrap();
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
       dispatch(logout());
       navigate(AUTH_ROUTES.SIGN_IN);
-    });
+      setIsOpen(false);
+    }
   };
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -4,6 +4,7 @@ import { authenticationRoutePaths, protectedRoutePaths } from "./common/routes";
 import BaseLayout from "@/layouts/BaseLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "@/layouts/AppLayout";
+import useAuthExpiration from "@/hooks/useAuthExpiration";
 
 const AppRouter = () => {
   const routes: RouteObject[] = [
@@ -40,7 +41,7 @@ const AppRouter = () => {
 };
 
 const AppRoutes = () => {
-  // useAuthExpiration();
+  useAuthExpiration();
 
   return (
     <BrowserRouter>

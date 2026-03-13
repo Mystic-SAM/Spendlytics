@@ -19,3 +19,9 @@ export const APP_CONSTANTS = {
    */
   SESSION_TIMEOUT_MS: 10000,
 } as const;
+
+/** Cookie name used for the refresh token. */
+export const REFRESH_TOKEN_COOKIE = "refreshToken";
+
+/** 30 days in milliseconds. */
+export const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 * 1000;

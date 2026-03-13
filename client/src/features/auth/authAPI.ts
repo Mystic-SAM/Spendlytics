@@ -22,11 +22,18 @@ export const authApi = apiClient.injectEndpoints({
         method: "POST",
       }),
     }),
+    refresh: builder.mutation({
+      query: () => ({
+        url: "/auth/refresh-token",
+        method: "POST",
+      }),
+    }),
   }),
 });
 
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useRefreshMutation,
   useLogoutMutation,
 } = authApi;

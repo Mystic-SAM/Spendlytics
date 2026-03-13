@@ -63,7 +63,6 @@ const ScheduleReportForm = ({ onCloseDrawer }: { onCloseDrawer: () => void }) =>
   // Handle form submission
   const onSubmit = (values: FormValues) => {
     const payload = { isEnabled: values.isEnabled }
-    console.log("Form submitted:", payload);
     updateReportSetting(payload).unwrap().then(() => {
       dispatch(updateCredentials({ reportSetting: payload }))
       onCloseDrawer();

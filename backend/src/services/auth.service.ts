@@ -5,8 +5,9 @@ import mongoose from "mongoose";
 import { ReportSettingModel } from "../models/report-setting.model.js";
 import { calculateNextReportDate } from "../utils/helper.js";
 import { RecurringIntervalEnum } from "../enums/model-enums.js";
-import { signJwtToken } from "../utils/jwt.js";
+import { signJwtToken, signRefreshToken, verifyJwtToken, type AccessTokenPayload } from "../utils/jwt.js";
 import { Logger } from "../utils/logger.js";
+import { Env } from "../config/env.config.js";
 
 export const registerService = async (body: RegisterSchemaType) => {
   const { email } = body;
@@ -62,7 +63,8 @@ export const loginService = async (body: LoginSchemaType) => {
     throw new UnauthorizedException(errMsg);
   }
 
-  const { token, expiresAt } = signJwtToken({ userId: user.id });
+  const { token: accessToken, expiresAt } = signJwtToken({ userId: user.id });
+  const refreshToken = signRefreshToken({ userId: user.id });
 
   const reportSetting = await ReportSettingModel.findOne(
     {
@@ -73,8 +75,39 @@ export const loginService = async (body: LoginSchemaType) => {
 
   return {
     user: user.omitPassword(),
-    accessToken: token,
+    accessToken,
+    refreshToken,
     expiresAt,
     reportSetting,
+  };
+};
+
+/**
+ * Verifies the provided refresh token (JWT), checks the user still exists,
+ * and issues a new access token + rotated refresh token.
+ */
+export const refreshTokenService = async (oldRefreshToken: string) => {
+  const payload = verifyJwtToken<AccessTokenPayload>(oldRefreshToken, Env.JWT_REFRESH_SECRET);
+
+  if (!payload) {
+    Logger.warn("Refresh token verification failed");
+    throw new UnauthorizedException("Invalid or expired refresh token");
+  }
+
+  const user = await UserModel.findById(payload.userId);
+  if (!user) {
+    Logger.warn("Refresh token used for non-existent user", { userId: payload.userId });
+    throw new UnauthorizedException("User not found");
+  }
+
+  const { token: accessToken, expiresAt } = signJwtToken({ userId: user.id });
+  const newRefreshToken = signRefreshToken({ userId: user.id });
+
+  Logger.debug("Token refreshed successfully", { userId: user.id });
+
+  return {
+    accessToken,
+    refreshToken: newRefreshToken,
+    expiresAt,
   };
 };

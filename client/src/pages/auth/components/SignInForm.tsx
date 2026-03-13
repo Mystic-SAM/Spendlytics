@@ -35,6 +35,10 @@ const SignInForm = ({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const onSubmit = (values: FormValues) => {
