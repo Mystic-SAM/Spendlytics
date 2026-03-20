@@ -5,6 +5,7 @@ import { bulkDeleteTransactionSchema, bulkInsertTransactionSchema, createTransac
 import { bulkDeleteTransactionService, bulkInsertTransactionService, createTransactionService, deleteTransactionService, duplicateTransactionService, getAllTransactionService, getTransactionByIdService, updateTransactionService } from "../services/transaction.service.js";
 import { Logger } from "../utils/logger.js";
 import type { RecurringStatus, TransactionType } from "../enums/model-enums.js";
+import type { DateRangePreset } from "../enums/date-range.enum.js";
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_PAGE_NUMBER = 1;
@@ -34,10 +35,15 @@ export const getAllTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
 
+    const { keyword, type, recurringStatus, preset, from, to } = req.query;
+
     const filters = {
-      keyword: req.query.keyword as string | undefined,
-      type: req.query.type as TransactionType | undefined,
-      recurringStatus: req.query.recurringStatus as RecurringStatus | undefined,
+      keyword: keyword as string | undefined,
+      type: type as TransactionType | undefined,
+      recurringStatus: recurringStatus as RecurringStatus | undefined,
+      dateRangePreset: preset as DateRangePreset | undefined,
+      customFrom: from ? new Date(from as string) : undefined,
+      customTo: to ? new Date(to as string) : undefined,
     };
 
     const pagination = {

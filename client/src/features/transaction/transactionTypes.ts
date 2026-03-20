@@ -28,6 +28,9 @@ export interface GetAllTransactionParams {
   recurringStatus?: "RECURRING" | "NON_RECURRING";
   pageNumber?: number;
   pageSize?: number;
+  dateRangePreset?: string;
+  customFrom?: string;
+  customTo?: string;
 }
 
 export interface TransactionType {

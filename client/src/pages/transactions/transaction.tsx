@@ -19,7 +19,7 @@ export default function Transactions() {
     >
       <Card className="border-0 shadow-none">
         <CardContent className="pt-2">
-          <TransactionTable pageSize={10} />
+          <TransactionTable pageSize={10} isShowDateFilter />
         </CardContent>
       </Card>
     </PageLayout>

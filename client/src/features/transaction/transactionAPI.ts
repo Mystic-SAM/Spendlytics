@@ -27,6 +27,9 @@ export const transactionApi = apiClient.injectEndpoints({
           recurringStatus = undefined,
           pageNumber = 1,
           pageSize = 10,
+          dateRangePreset = undefined,
+          customFrom = undefined,
+          customTo = undefined,
         } = params;
 
         return {
@@ -38,6 +41,9 @@ export const transactionApi = apiClient.injectEndpoints({
             recurringStatus,
             pageNumber,
             pageSize,
+            preset: dateRangePreset,
+            from: customFrom,
+            to: customTo,
           },
         };
       },

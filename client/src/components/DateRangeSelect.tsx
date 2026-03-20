@@ -14,8 +14,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 
 export const DateRangeEnum = {
   LAST_30_DAYS: "30days",
@@ -47,12 +57,23 @@ interface DateRangeSelectProps {
   dateRange: DateRangeType;
   setDateRange: (range: DateRangeType) => void;
   defaultRange?: DateRangeEnumType;
+  showCustom?: boolean
 }
 
 const now = new Date();
 const today = endOfDay(now);
 
 const presets: DateRangePreset[] = [
+  {
+    label: "All Time",
+    value: DateRangeEnum.ALL_TIME,
+    getRange: () => ({
+      from: null,
+      to: null,
+      value: DateRangeEnum.ALL_TIME,
+      label: "across All Time",
+    }),
+  },
   {
     label: "Last 30 Days",
     value: DateRangeEnum.LAST_30_DAYS,
@@ -114,24 +135,17 @@ const presets: DateRangePreset[] = [
 
     }),
   },
-  {
-    label: "All Time",
-    value: DateRangeEnum.ALL_TIME,
-    getRange: () => ({
-      from: null,
-      to: null,
-      value: DateRangeEnum.ALL_TIME,
-      label: "across All Time",
-    }),
-  },
 ];
 
 export const DateRangeSelect = ({
   dateRange,
   setDateRange,
   defaultRange = DateRangeEnum.THIS_MONTH,
+  showCustom = false,
 }: DateRangeSelectProps) => {
   const [open, setOpen] = useState(false);
+  const [customDialogOpen, setCustomDialogOpen] = useState(false);
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
 
   const displayText = dateRange
     ? presets.find((p) => p.value === dateRange.value)?.label ||
@@ -151,41 +165,124 @@ export const DateRangeSelect = ({
     }
   }, [dateRange, defaultRange, setDateRange]);
 
+  const handleCustomOptionClick = () => {
+    setOpen(false);
+    setCustomRange(
+      dateRange?.from && dateRange?.to
+        ? { from: dateRange.from, to: dateRange.to }
+        : undefined
+    );
+    setCustomDialogOpen(true);
+  };
+
+  const handleCustomApply = () => {
+    if (customRange?.from && customRange?.to) {
+      const formattedLabel = `${format(customRange.from, "MMM dd, y")} – ${format(customRange.to, "MMM dd, y")}`;
+      setDateRange({
+        from: customRange.from,
+        to: endOfDay(customRange.to),
+        value: DateRangeEnum.CUSTOM,
+        label: formattedLabel,
+      });
+      setCustomDialogOpen(false);
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            `w-[200px] flex items-center justify-between text-left font-normal !bg-[var(--secondary-dark-color)]
-            border-gray-700 !text-white !cursor-pointer`,
-            !dateRange && "text-muted-foreground"
-          )}
-        >
-          {displayText}
-          <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="grid py-1">
-          {presets.map((preset) => (
+    <>
+      <div className="flex items-center gap-1">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
             <Button
-              key={preset.value}
-              variant="ghost"
+              variant="outline"
               className={cn(
-                "justify-start text-left",
-                dateRange?.value === preset.value && "bg-accent"
+                `w-[fit-content] flex items-center justify-between text-left font-normal !cursor-pointer`,
+                !dateRange && "text-muted-foreground"
               )}
-              onClick={() => {
-                setDateRange(preset.getRange());
-                setOpen(false);
-              }}
             >
-              {preset.label}
+              {displayText}
+              <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
             </Button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <div className="grid py-1">
+              {presets.map((preset) => (
+                <Button
+                  key={preset.value}
+                  variant="ghost"
+                  className={cn(
+                    "justify-start text-left",
+                    dateRange?.value === preset.value && "bg-accent"
+                  )}
+                  onClick={() => {
+                    setDateRange(preset.getRange());
+                    setOpen(false);
+                  }}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+              {
+                showCustom && (
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "justify-start text-left",
+                      dateRange?.value === DateRangeEnum.CUSTOM && "bg-accent"
+                    )}
+                    onClick={handleCustomOptionClick}
+                  >
+                    Custom
+                  </Button>
+                )
+              }
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Custom Date Range Dialog */}
+      {showCustom &&
+        <Dialog open={customDialogOpen} onOpenChange={setCustomDialogOpen}>
+          <DialogContent className="sm:max-w-fit">
+            <DialogHeader>
+              <DialogTitle>Select Custom Date Range</DialogTitle>
+              <DialogDescription className="sr-only">
+                Select a date range to view transactions
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 flex justify-center">
+              <Calendar
+                mode="range"
+                selected={customRange}
+                onSelect={setCustomRange}
+                numberOfMonths={2}
+                disabled={(date) => date > new Date()}
+                defaultMonth={customRange?.from ?? subMonths(new Date(), 1)}
+              />
+            </div>
+            {customRange?.from && customRange?.to && (
+              <p className="text-sm text-muted-foreground text-center">
+                {format(customRange.from, "MMM dd, y")} – {format(customRange.to, "MMM dd, y")}
+              </p>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setCustomDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCustomApply}
+                disabled={!customRange?.from || !customRange?.to}
+              >
+                Apply
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      }
+    </>
   );
 };

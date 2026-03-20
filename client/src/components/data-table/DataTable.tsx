@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import TableSkeleton from "./TableSkeleton";
 import { DataTablePagination } from "./DataTablePagination";
 import { EmptyState } from "../EmptyState";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 interface FilterOption {
   key: string;
@@ -45,6 +45,7 @@ interface DataTableProps<TData> {
   searchPlaceholder?: string;
   showSearch?: boolean;
   filters?: FilterOption[];
+  filterExtra?: ReactNode;
   tableWrapperClassName?: string;
   cellClassName?: string;
   onSearch?: (term: string) => void;
@@ -71,6 +72,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
     searchPlaceholder = "Search...",
     showSearch = true,
     filters = [],
+    filterExtra,
     tableWrapperClassName,
     cellClassName,
     onSearch,
@@ -198,6 +200,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
               </SelectContent>
             </Select>
           ))}
+          {filterExtra}
 
           {selection && hasSelections && (
             <Button

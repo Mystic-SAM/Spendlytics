@@ -6,6 +6,8 @@ import type { CreateTransactionType, UpdateTransactionType } from "../validators
 import { Logger } from "../utils/logger.js";
 import { RecurringStatusEnum, type RecurringStatus, type TransactionType } from "../enums/model-enums.js";
 import { NotFoundException } from "../utils/app-error.js";
+import type { DateRangePreset } from "../enums/date-range.enum.js";
+import { getDateRange } from "../utils/date.js";
 
 export const createTransactionService = async (
   body: CreateTransactionType,
@@ -51,13 +53,16 @@ export const getAllTransactionService = async (
     keyword?: string | undefined;
     type?: TransactionType | undefined;
     recurringStatus?: RecurringStatus | undefined;
+    dateRangePreset?: DateRangePreset | undefined;
+    customFrom?: Date | undefined;
+    customTo?: Date | undefined;
   },
   pagination: {
     pageSize: number;
     pageNumber: number;
   }
 ) => {
-  const { keyword, type, recurringStatus } = filters;
+  const { keyword, type, recurringStatus, dateRangePreset, customFrom, customTo } = filters;
 
   const filterConditions: Record<string, any> = {
     userId,
@@ -79,6 +84,16 @@ export const getAllTransactionService = async (
       filterConditions.isRecurring = true;
     } else if (recurringStatus === RecurringStatusEnum.NON_RECURRING) {
       filterConditions.isRecurring = false;
+    }
+  }
+
+  if (dateRangePreset || (customFrom && customTo)) {
+    const range = getDateRange(dateRangePreset, customFrom, customTo);
+    if (range.from && range.to) {
+      filterConditions.date = {
+        $gte: range.from,
+        $lte: range.to,
+      };
     }
   }
 
