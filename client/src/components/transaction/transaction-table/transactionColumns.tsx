@@ -25,8 +25,10 @@ import { PAYMENT_METHODS, TRANSACTION_CATEGORY, TRANSACTION_FREQUENCY } from "@/
 import type { TransactionType } from "@/features/transaction/transactionTypes";
 import { cn } from "@/lib/utils";
 import useEditTransactionDrawer from "@/hooks/useEditTransactionDrawer";
-import { useDeleteTransactionMutation, useDuplicateTransactionMutation } from "@/features/transaction/transactionAPI";
+import { useDuplicateTransactionMutation } from "@/features/transaction/transactionAPI";
 import { toast } from "sonner";
+import DeleteTransactionDialog from "@/components/DeleteTransactionDialog";
+import { useState } from "react";
 
 type FrequencyInfo = {
   label: string;
@@ -161,11 +163,7 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     ),
     cell: ({ row }) => {
       const category = row.original.category;
-      return (
-        <div className="capitalize">
-          {category}
-        </div>
-      );
+      return <div className="capitalize">{category}</div>;
     },
   },
   {
@@ -234,10 +232,12 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
 ];
 
 const ActionsCell = ({ row }: { row: any }) => {
-  const transactionId = row.original.id;
+  //const isRecurring = row.original.isRecurring;
+  const transactionId: string = row.original.id;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { onOpenDrawer } = useEditTransactionDrawer();
-  const [duplicateTransaction, { isLoading: isDuplicating }] = useDuplicateTransactionMutation();
-  const [deleteTransaction, { isLoading: isDeleting }] = useDeleteTransactionMutation();
+  const [duplicateTransaction, { isLoading: isDuplicating }] =
+    useDuplicateTransactionMutation();
 
   const handleDuplicate = (e: Event) => {
     e.preventDefault();
@@ -247,57 +247,57 @@ const ActionsCell = ({ row }: { row: any }) => {
     }).catch((error) => {
       toast.error(error.data?.message || "Failed to duplicate transaction");
     });
-
-  }
-
-  const handleDelete = (e: Event) => {
-    e.preventDefault();
-    if (isDeleting) return;
-    deleteTransaction(transactionId).unwrap().then(() => {
-      toast.success("Transaction deleted successfully");
-    }).catch((error) => {
-      toast.error(error.data?.message || "Failed to delete transaction");
-    });
-
-  }
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-44" align="end"
-        onCloseAutoFocus={(e) => {
-          if (isDeleting || isDuplicating) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <DropdownMenuItem onClick={() => onOpenDrawer(transactionId)}>
-          <Pencil className="mr-1 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="relative"
-          disabled={isDuplicating}
-          onSelect={handleDuplicate}
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-44"
+          align="end"
+          onCloseAutoFocus={(e) => {
+            if (isDuplicating) {
+              e.preventDefault();
+            }
+          }}
         >
-          <Copy className="mr-1 h-4 w-4" />
-          Duplicate
-          {isDuplicating && <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="relative !text-destructive"
-          disabled={isDeleting}
-          onSelect={handleDelete}
-        >
-          <Trash2 className="mr-1 h-4 w-4 !text-destructive" />
-          Delete
-          {isDeleting && <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem onClick={() => onOpenDrawer(transactionId)}>
+            <Pencil className="mr-1 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="relative"
+            disabled={isDuplicating}
+            onSelect={handleDuplicate}
+          >
+            <Copy className="mr-1 h-4 w-4" />
+            Duplicate
+            {isDuplicating && (
+              <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="relative !text-destructive"
+            onSelect={() => setIsDialogOpen(true)}
+          >
+            <Trash2 className="mr-1 h-4 w-4 !text-destructive" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DeleteTransactionDialog
+        isOpen={isDialogOpen}
+        setIsOpen={setIsDialogOpen}
+        transactionId={transactionId}
+        title="Confirm Delete"
+        description="Are you sure you want to delete this transaction? This action cannot be undone."
+      />
+    </>
   );
 };

@@ -4,7 +4,6 @@ import { useBulkDeleteTransactionMutation, useGetAllTransactionsQuery } from "@/
 import useDebouncedSearch from "@/hooks/useDebounceSearch";
 import { useState } from "react";
 import { transactionColumns } from "./transactionColumns";
-import { toast } from "sonner";
 import { DateRangeEnum, DateRangeSelect, type DateRangeType } from "@/components/DateRangeSelect";
 import { format } from "date-fns";
 
@@ -42,9 +41,6 @@ const TransactionTable = (props: {
   const { debouncedTerm, setSearchTerm } = useDebouncedSearch("", {
     delay: 500,
   });
-
-  const [bulkDeleteTransaction, { isLoading: isBulkDeleting }] =
-    useBulkDeleteTransactionMutation();
 
   // Build date range query params
   const dateRangeParams = (() => {
@@ -87,7 +83,6 @@ const TransactionTable = (props: {
     pageSize: filter.pageSize,
   };
 
-
   const handleSearch = (value: string) => {
     setSearchTerm(value);
   };
@@ -101,7 +96,6 @@ const TransactionTable = (props: {
     }));
   };
 
-
   const handlePageChange = (pageNumber: number) => {
     setFilter((prev) => ({ ...prev, pageNumber }));
   };
@@ -110,24 +104,12 @@ const TransactionTable = (props: {
     setFilter((prev) => ({ ...prev, pageSize }));
   };
 
-  const handleBulkDelete = (transactionIds: string[]) => {
-    bulkDeleteTransaction(transactionIds)
-      .unwrap()
-      .then(() => {
-        toast.success("Transactions deleted successfully");
-      })
-      .catch((error) => {
-        toast.error(error.data?.message || "Failed to delete transactions");
-      });
-  };
-
   return (
     <DataTable
       data={transactions}
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={isFetching}
-      isBulkDeleting={isBulkDeleting}
       isShowPagination={isShowPagination}
       pagination={pagination}
       filters={[
@@ -163,7 +145,6 @@ const TransactionTable = (props: {
       onPageChange={(pageNumber) => handlePageChange(pageNumber)}
       onPageSizeChange={(pageSize) => handlePageSizeChange(pageSize)}
       onFilterChange={(filters) => handleFilterChange(filters)}
-      onBulkDelete={handleBulkDelete}
     />
   );
 };

@@ -35,7 +35,7 @@ export const DateRangeEnum = {
   THIS_MONTH: "thisMonth",
   THIS_YEAR: "thisYear",
   ALL_TIME: "allTime",
-  CUSTOM: "custom"
+  CUSTOM: "custom",
 } as const;
 
 export type DateRangeEnumType = (typeof DateRangeEnum)[keyof typeof DateRangeEnum];
@@ -57,7 +57,7 @@ interface DateRangeSelectProps {
   dateRange: DateRangeType;
   setDateRange: (range: DateRangeType) => void;
   defaultRange?: DateRangeEnumType;
-  showCustom?: boolean
+  showCustom?: boolean;
 }
 
 const now = new Date();
@@ -195,10 +195,7 @@ export const DateRangeSelect = ({
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={cn(
-                `w-[fit-content] flex items-center justify-between text-left font-normal !cursor-pointer`,
-                !dateRange && "text-muted-foreground"
-              )}
+              className="w-[fit-content] text-foreground flex items-center justify-between text-left font-normal !cursor-pointer"
             >
               {displayText}
               <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
@@ -212,7 +209,7 @@ export const DateRangeSelect = ({
                   variant="ghost"
                   className={cn(
                     "justify-start text-left",
-                    dateRange?.value === preset.value && "bg-accent"
+                    dateRange?.value === preset.value && "bg-accent",
                   )}
                   onClick={() => {
                     setDateRange(preset.getRange());
