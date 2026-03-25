@@ -1,0 +1,27 @@
+import { enIN } from "date-fns/locale";
+
+/**
+ * Global application constants
+ */
+export const APP_CONSTANTS = {
+  /**
+   * Date locale for Indian Standard Time (IST)
+   */
+  DATE_LOCALE: enIN,
+
+  /**
+   * IST timezone offset in minutes (UTC +5:30)
+   */
+  IST_OFFSET_MINUTES: 330,
+
+  /**
+   * Session transaction timeout in milliseconds
+   */
+  SESSION_TIMEOUT_MS: 10000,
+} as const;
+
+/** Cookie name used for the refresh token. */
+export const REFRESH_TOKEN_COOKIE = "refreshToken";
+
+/** 30 days in milliseconds. */
+export const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
