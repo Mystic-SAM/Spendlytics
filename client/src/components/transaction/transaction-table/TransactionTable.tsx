@@ -1,6 +1,6 @@
 import { DataTable } from "@/components/data-table/DataTable";
 import { TRANSACTION_CATEGORY, type RecurringStatusType, type TransactionCategoryType } from "@/constants/constants";
-import { useBulkDeleteTransactionMutation, useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
+import { useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
 import useDebouncedSearch from "@/hooks/useDebounceSearch";
 import { useState } from "react";
 import { transactionColumns } from "./transactionColumns";
@@ -85,12 +85,14 @@ const TransactionTable = (props: {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
+    handlePageChange(1);
   };
 
   const handleFilterChange = (filters: Record<string, string>) => {
     const { type, frequency } = filters;
     setFilter((prev) => ({
       ...prev,
+      pageNumber: 1,
       type: type as TransactionCategoryType,
       recurringStatus: frequency as RecurringStatusType,
     }));
