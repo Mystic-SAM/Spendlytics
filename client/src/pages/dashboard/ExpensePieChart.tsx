@@ -132,7 +132,7 @@ const ExpensePieChart = (props: { dateRange?: DateRangeType }) => {
                               y={viewBox.cy}
                               className="fill-foreground text-2xl font-bold"
                             >
-                              ${totalSpent.toLocaleString()}
+                              {formatCurrency(totalSpent, { decimalPlaces: 0 })}
                             </tspan>
                             <tspan
                               x={viewBox.cx}

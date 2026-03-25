@@ -38,7 +38,7 @@ const AuthPage = ({ type }: AuthPageProps) => {
           </div>
           <div className="relative max-w-3xl h-full w-full overflow-hidden mt-3">
             <img
-              src={theme === "dark" ? dashboardImgDark : dashboardImg}
+              src={theme === "light" ? dashboardImg : dashboardImgDark}
               alt="Dashboard"
               className="absolute top-0 left-0 w-full h-full"
               style={{
