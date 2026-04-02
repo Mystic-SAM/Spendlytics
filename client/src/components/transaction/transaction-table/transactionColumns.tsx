@@ -1,6 +1,7 @@
 import {
   CircleDot,
   Copy,
+  Eye,
   Loader,
   type LucideIcon,
   MoreHorizontal,
@@ -27,6 +28,7 @@ import useEditTransactionDrawer from "@/hooks/useEditTransactionDrawer";
 import { useDuplicateTransactionMutation } from "@/features/transaction/transactionAPI";
 import { toast } from "sonner";
 import DeleteTransactionDialog from "@/components/DeleteTransactionDialog";
+import TransactionDetailsDrawer from "@/components/transaction/TransactionDetailsDrawer";
 import { useState } from "react";
 import SortIcon from "@/components/SortIcon";
 
@@ -235,6 +237,7 @@ const ActionsCell = ({ row }: { row: any }) => {
   //const isRecurring = row.original.isRecurring;
   const transactionId: string = row.original.id;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const { onOpenDrawer } = useEditTransactionDrawer();
   const [duplicateTransaction, { isLoading: isDuplicating }] =
     useDuplicateTransactionMutation();
@@ -266,6 +269,10 @@ const ActionsCell = ({ row }: { row: any }) => {
             }
           }}
         >
+          <DropdownMenuItem onClick={() => setIsDetailsOpen(true)}>
+            <Eye className="mr-1 h-4 w-4" />
+            View Details
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onOpenDrawer(transactionId)}>
             <Pencil className="mr-1 h-4 w-4" />
             Edit
@@ -297,6 +304,11 @@ const ActionsCell = ({ row }: { row: any }) => {
         transactionId={transactionId}
         title="Confirm Delete"
         description="Are you sure you want to delete this transaction? This action cannot be undone."
+      />
+      <TransactionDetailsDrawer
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        transaction={row.original}
       />
     </>
   );
