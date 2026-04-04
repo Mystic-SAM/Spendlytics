@@ -6,6 +6,7 @@ import { useState } from "react";
 import { transactionColumns } from "./transactionColumns";
 import { DateRangeEnum, DateRangeSelect, type DateRangeType } from "@/components/DateRangeSelect";
 import { format } from "date-fns";
+import type { SortingState } from "@tanstack/react-table";
 
 type FilterType = {
   type?: TransactionCategoryType | undefined;
@@ -38,6 +39,8 @@ const TransactionTable = (props: {
       : null
   );
 
+  const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);
+
   const { debouncedTerm, setSearchTerm } = useDebouncedSearch("", {
     delay: 500,
   });
@@ -65,6 +68,18 @@ const TransactionTable = (props: {
     return {};
   })();
 
+  // Extract sort params from sorting state
+  const sortParams = (() => {
+    if (!sorting || sorting.length === 0) {
+      return { sortBy: "date", sortOrder: "desc" as const };
+    }
+    const { id, desc } = sorting[0];
+    return {
+      sortBy: id,
+      sortOrder: desc ? ("desc" as const) : ("asc" as const),
+    };
+  })();
+
   const { data, isFetching } = useGetAllTransactionsQuery({
     keyword: debouncedTerm,
     type: filter.type,
@@ -72,6 +87,7 @@ const TransactionTable = (props: {
     pageNumber: filter.pageNumber,
     pageSize: filter.pageSize,
     ...dateRangeParams,
+    ...sortParams,
   });
 
   const transactions = data?.transactions || [];
@@ -106,13 +122,17 @@ const TransactionTable = (props: {
     setFilter((prev) => ({ ...prev, pageSize }));
   };
 
+  const handleSortingChange = (newSorting: SortingState) => {
+    setSorting(newSorting);
+    handlePageChange(1);
+  };
+
   return (
     <DataTable
       data={transactions}
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={isFetching}
-      defaultSort={[{ id: "date", desc: true }]}
       isShowPagination={isShowPagination}
       pagination={pagination}
       filters={[
@@ -148,6 +168,8 @@ const TransactionTable = (props: {
       onPageChange={(pageNumber) => handlePageChange(pageNumber)}
       onPageSizeChange={(pageSize) => handlePageSizeChange(pageSize)}
       onFilterChange={(filters) => handleFilterChange(filters)}
+      onSortingChange={handleSortingChange}
+      defaultSort={sorting}
     />
   );
 };

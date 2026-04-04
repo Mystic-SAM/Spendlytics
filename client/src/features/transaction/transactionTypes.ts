@@ -31,6 +31,8 @@ export interface GetAllTransactionParams {
   dateRangePreset?: string;
   customFrom?: string;
   customTo?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface TransactionType {

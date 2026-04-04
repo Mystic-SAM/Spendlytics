@@ -6,9 +6,13 @@ import { bulkDeleteTransactionService, bulkInsertTransactionService, createTrans
 import { Logger } from "../utils/logger.js";
 import type { RecurringStatus, TransactionType } from "../enums/model-enums.js";
 import type { DateRangePreset } from "../enums/date-range.enum.js";
+import type { SortOptionsType } from "../@types/index.js";
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_PAGE_NUMBER = 1;
+
+const DEFAULT_SORT_BY = "date";
+const DEFAULT_SORT_ORDER: SortOptionsType["sortOrder"] = "desc";
 
 export const createTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -35,7 +39,7 @@ export const getAllTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
 
-    const { keyword, type, recurringStatus, preset, from, to } = req.query;
+    const { keyword, type, recurringStatus, preset, from, to, sortBy, sortOrder } = req.query;
 
     const filters = {
       keyword: keyword as string | undefined,
@@ -51,7 +55,12 @@ export const getAllTransactionController = asyncHandler(
       pageNumber: parseInt(req.query.pageNumber as string) || DEFAULT_PAGE_NUMBER,
     };
 
-    const result = await getAllTransactionService(userId, filters, pagination);
+    const sortOptions: SortOptionsType = {
+      sortBy: (sortBy as string) || DEFAULT_SORT_BY,
+      sortOrder: ((sortOrder as string) || DEFAULT_SORT_ORDER) as SortOptionsType["sortOrder"],
+    };
+
+    const result = await getAllTransactionService(userId, filters, pagination, sortOptions);
 
     return res.status(HTTP_STATUS.OK).json({
       message: "Transaction fetched successfully",

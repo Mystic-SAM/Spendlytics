@@ -1,7 +1,6 @@
 import {
   getCoreRowModel,
   getFilteredRowModel,
-  getSortedRowModel,
   useReactTable,
   flexRender,
   type ColumnDef,
@@ -51,6 +50,7 @@ interface DataTableProps<TData> {
   cellClassName?: string;
   onSearch?: (term: string) => void;
   onFilterChange?: (filters: Record<string, string>) => void;
+  onSortingChange?: (sorting: SortingState) => void;
   selection?: boolean;
   isLoading?: boolean;
   isShowPagination?: boolean;
@@ -77,6 +77,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
     cellClassName,
     onSearch,
     onFilterChange,
+    onSortingChange,
     selection = true,
     isLoading = false,
     isShowPagination = true,
@@ -94,6 +95,14 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
   const [rowSelection, setRowSelection] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const handleSortingChange = (updaterOrValue: any) => {
+    const newSorting = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(sorting) 
+      : updaterOrValue;
+    setSorting(newSorting);
+    onSortingChange?.(newSorting);
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -104,12 +113,11 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
       columnVisibility,
       rowSelection: selection ? rowSelection : {},
     },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: selection ? setRowSelection : undefined,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 

@@ -8,6 +8,8 @@ import { RecurringStatusEnum, type RecurringStatus, type TransactionType } from 
 import { NotFoundException } from "../utils/app-error.js";
 import type { DateRangePreset } from "../enums/date-range.enum.js";
 import { getDateRange } from "../utils/date.js";
+import type { SortOptionsType } from "../@types/index.js";
+import type { SortOrder } from "mongoose";
 
 export const createTransactionService = async (
   body: CreateTransactionType,
@@ -60,6 +62,10 @@ export const getAllTransactionService = async (
   pagination: {
     pageSize: number;
     pageNumber: number;
+  },
+  sortOptions: {
+    sortBy: string;
+    sortOrder: SortOptionsType["sortOrder"];
   }
 ) => {
   const { keyword, type, recurringStatus, dateRangePreset, customFrom, customTo } = filters;
@@ -100,11 +106,13 @@ export const getAllTransactionService = async (
   const { pageSize, pageNumber } = pagination;
   const skip = (pageNumber - 1) * pageSize;
 
+  const sortObject: Record<string, SortOrder> = {[sortOptions.sortBy]: sortOptions.sortOrder};
+
   const [transactions, totalCount] = await Promise.all([
     TransactionModel.find(filterConditions)
       .skip(skip)
       .limit(pageSize)
-      .sort({ date: -1 }),
+      .sort(sortObject),
     TransactionModel.countDocuments(filterConditions),
   ]);
 
