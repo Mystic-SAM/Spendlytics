@@ -1,7 +1,8 @@
 import { UserModel } from "../models/user.model.js";
-import { NotFoundException } from "../utils/app-error.js";
+import { NotFoundException, UnauthorizedException } from "../utils/app-error.js";
 import { Logger } from "../utils/logger.js";
 import type { UpdateUserType } from "../validators/user.validator.js";
+import { verifyOTP } from "../utils/otp-store.js";
 
 export const findByIdUserService = async (userId: string) => {
   Logger.debug("Fetching user by ID", { userId });
@@ -26,6 +27,17 @@ export const updateUserService = async (
   if (!user) {
     Logger.error("User not found for update", { userId });
     throw new NotFoundException("User not found");
+  }
+
+  // If email is being changed, OTP verification is mandatory
+  if (body.email && body.email !== user.email) {
+    if (!body.otp) {
+      throw new UnauthorizedException("OTP is required to update email address.");
+    }
+    const isOtpValid = verifyOTP(body.email, body.otp);
+    if (!isOtpValid) {
+      throw new UnauthorizedException("Invalid or expired OTP. Please request a new one.");
+    }
   }
 
   const updateData: Record<string, string> = {};

@@ -1,10 +1,13 @@
 import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
 import { HTTP_STATUS } from "../config/http.config.js";
 import type { Request, Response } from "express";
-import { loginSchema, registerSchema } from "../validators/auth.validator.js";
+import { loginSchema, registerSchema, sendOtpSchema } from "../validators/auth.validator.js";
 import { loginService, registerService, refreshTokenService } from "../services/auth.service.js";
 import { Env } from "../config/env.config.js";
 import { REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_MAX_AGE } from "../constants/constants.js";
+import { generateAndStoreOTP } from "../utils/otp-store.js";
+import { sendOtpEmail } from "../mailers/otp.mailer.js";
+import { Logger } from "../utils/logger.js";
 
 /**
  * Returns cookie options for the refresh token.
@@ -93,4 +96,24 @@ export const logoutController = asyncHandler(
         message: "User logged out successfully",
       });
   },
+);
+
+/**
+ * Generates a 6-digit OTP for the given email, stores it (overwriting any
+ * previous OTP to keep only the latest valid), and sends it via Gmail.
+ */
+export const sendOtpController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email } = sendOtpSchema.parse(req.body);
+
+    const otp = generateAndStoreOTP(email);
+
+    await sendOtpEmail({ email, otp });
+
+    Logger.info("OTP sent", { email });
+
+    return res.status(HTTP_STATUS.OK).json({
+      message: "OTP sent successfully. It is valid for 10 minutes.",
+    });
+  }
 );
