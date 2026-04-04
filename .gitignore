@@ -40,3 +40,9 @@ dist
 dist-ssr
 *.local
 .vite
+
+# CSV files
+*.csv
+
+# Excel files
+*.xlsx
