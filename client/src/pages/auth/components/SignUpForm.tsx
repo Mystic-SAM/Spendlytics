@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/validators/authValidators";
 import type { ComponentPropsWithoutRef } from "react";
 import OTPInput from "@/components/OTPInput";
-import { OTP_DIGITS } from "@/constants/constants";
+import { GITHUB_LOGIN_ENABLED, OTP_DIGITS } from "@/constants/constants";
 import { useOtp } from "@/hooks/useOtp";
 
 type FormValues = z.infer<typeof signUpSchema>;
@@ -220,21 +220,26 @@ const SignUpForm = ({
               Verify OTP & Sign Up
             </Button>
           )}
-
-          <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-            <span className="relative z-10 bg-[var(--bg-color)] dark:bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => toast.info("GitHub sign up not implemented yet!")}
-          >
-            <GithubIcon />
-            Sign up with GitHub
-          </Button>
+          {
+            GITHUB_LOGIN_ENABLED && (
+              <>
+                <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                  <span className="relative z-10 bg-[var(--bg-color)] dark:bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => toast.info("GitHub sign up not implemented yet!")}
+                >
+                  <GithubIcon />
+                  Sign up with GitHub
+                </Button>
+              </>
+            )
+          }
         </div>
 
         <div className="text-center text-sm">

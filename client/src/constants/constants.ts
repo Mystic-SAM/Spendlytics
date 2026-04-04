@@ -97,3 +97,5 @@ export const REPORT_STATUS = {
 export type ReportStatusType = keyof typeof REPORT_STATUS;
 
 export type ThemeType = "dark" | "light" | "system";
+
+export const GITHUB_LOGIN_ENABLED = false;

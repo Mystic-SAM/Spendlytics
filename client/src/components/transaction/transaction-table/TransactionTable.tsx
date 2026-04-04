@@ -112,6 +112,7 @@ const TransactionTable = (props: {
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={isFetching}
+      defaultSort={[{ id: "date", desc: true }]}
       isShowPagination={isShowPagination}
       pagination={pagination}
       filters={[

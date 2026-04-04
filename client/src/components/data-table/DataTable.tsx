@@ -62,6 +62,7 @@ interface DataTableProps<TData> {
   };
   onPageChange?: (pageNumber: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  defaultSort?: SortingState;
 }
 
 export function DataTable<TData>(props: DataTableProps<TData>) {
@@ -82,11 +83,12 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
     pagination,
     onPageChange,
     onPageSizeChange,
+    defaultSort,
   } = props;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>(defaultSort || []);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
