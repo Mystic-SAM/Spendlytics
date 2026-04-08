@@ -13,10 +13,15 @@ export const passwordSchema = z
   .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
   .regex(/[0-9]/, { message: "Password must contain at least one number" });
 
+export const sendOtpSchema = z.object({
+  email: emailSchema,
+});
+
 export const registerSchema = z.object({
   name: z.string().trim().min(1).max(255),
   email: emailSchema,
   password: passwordSchema,
+  otp: z.string().length(6, { message: "OTP must be exactly 6 digits" }),
 });
 
 export const loginSchema = z.object({
@@ -24,5 +29,6 @@ export const loginSchema = z.object({
   password: passwordSchema,
 });
 
+export type SendOtpSchemaType = z.infer<typeof sendOtpSchema>;
 export type RegisterSchemaType = z.infer<typeof registerSchema>;
 export type LoginSchemaType = z.infer<typeof loginSchema>;

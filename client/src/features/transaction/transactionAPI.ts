@@ -30,6 +30,8 @@ export const transactionApi = apiClient.injectEndpoints({
           dateRangePreset = undefined,
           customFrom = undefined,
           customTo = undefined,
+          sortBy = undefined,
+          sortOrder = undefined,
         } = params;
 
         return {
@@ -44,6 +46,8 @@ export const transactionApi = apiClient.injectEndpoints({
             preset: dateRangePreset,
             from: customFrom,
             to: customTo,
+            sortBy,
+            sortOrder,
           },
         };
       },

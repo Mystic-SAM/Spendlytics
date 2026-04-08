@@ -1,7 +1,6 @@
 import {
   getCoreRowModel,
   getFilteredRowModel,
-  getSortedRowModel,
   useReactTable,
   flexRender,
   type ColumnDef,
@@ -51,6 +50,7 @@ interface DataTableProps<TData> {
   cellClassName?: string;
   onSearch?: (term: string) => void;
   onFilterChange?: (filters: Record<string, string>) => void;
+  onSortingChange?: (sorting: SortingState) => void;
   selection?: boolean;
   isLoading?: boolean;
   isShowPagination?: boolean;
@@ -62,6 +62,7 @@ interface DataTableProps<TData> {
   };
   onPageChange?: (pageNumber: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  defaultSort?: SortingState;
 }
 
 export function DataTable<TData>(props: DataTableProps<TData>) {
@@ -76,21 +77,31 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
     cellClassName,
     onSearch,
     onFilterChange,
+    onSortingChange,
     selection = true,
     isLoading = false,
     isShowPagination = true,
     pagination,
     onPageChange,
     onPageSizeChange,
+    defaultSort,
   } = props;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(defaultSort || []);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleSortingChange = (updaterOrValue: any) => {
+    const newSorting = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(sorting) 
+      : updaterOrValue;
+    setSorting(newSorting);
+    onSortingChange?.(newSorting);
+  };
 
   const table = useReactTable({
     data,
@@ -102,12 +113,11 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
       columnVisibility,
       rowSelection: selection ? rowSelection : {},
     },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: selection ? setRowSelection : undefined,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 
@@ -230,6 +240,7 @@ export function DataTable<TData>(props: DataTableProps<TData>) {
           ) : (
             <Table
               className={cn(
+                "data-table",
                 table.getRowModel().rows.length === 0 ? "h-[200px]" : "",
               )}
             >

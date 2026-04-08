@@ -28,6 +28,13 @@ export const authApi = apiClient.injectEndpoints({
         method: "POST",
       }),
     }),
+    sendOtp: builder.mutation<{ message: string }, { email: string }>({
+      query: (body) => ({
+        url: "/auth/send-otp",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -36,4 +43,5 @@ export const {
   useRegisterMutation,
   useRefreshMutation,
   useLogoutMutation,
+  useSendOtpMutation,
 } = authApi;

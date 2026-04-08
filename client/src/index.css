@@ -132,4 +132,20 @@ body {
   body {
     @apply bg-[var(--bg-color)] dark:bg-background text-foreground;
   }
+
+  .data-table {
+    th button {
+      .sort-icon.not-sorted {
+        opacity: 0.2;
+        transition: opacity 0.2s ease-in-out;
+      }
+
+      &:focus,
+      &:hover {
+        .sort-icon.not-sorted {
+          opacity: 1;
+        }
+      }
+    }
+  }
 }

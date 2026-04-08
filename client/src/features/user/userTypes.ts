@@ -12,4 +12,5 @@ export interface UpdateUserResponse {
 export interface UpdateUserPayload {
   name?: string;
   email?: string;
+  otp?: string;
 }

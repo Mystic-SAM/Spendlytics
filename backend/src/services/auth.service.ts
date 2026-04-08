@@ -1,6 +1,7 @@
 import { UserModel } from "../models/user.model.js";
 import type { LoginSchemaType, RegisterSchemaType } from "../validators/auth.validator.js";
 import { ConflictException, NotFoundException, UnauthorizedException } from "../utils/app-error.js";
+import { verifyOTP } from "../utils/otp-store.js";
 import mongoose from "mongoose";
 import { ReportSettingModel } from "../models/report-setting.model.js";
 import { calculateNextReportDate } from "../utils/helper.js";
@@ -10,8 +11,14 @@ import { Logger } from "../utils/logger.js";
 import { Env } from "../config/env.config.js";
 
 export const registerService = async (body: RegisterSchemaType) => {
-  const { email } = body;
+  const { email, otp } = body;
   const session = await mongoose.startSession();
+
+  // Verify OTP before doing anything else (fail fast, no DB transaction needed)
+  const isOtpValid = verifyOTP(email, otp);
+  if (!isOtpValid) {
+    throw new UnauthorizedException("Invalid or expired OTP. Please request a new one.");
+  }
 
   try {
     const result = await session.withTransaction(async () => {

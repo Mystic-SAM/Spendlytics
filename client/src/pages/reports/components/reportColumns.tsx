@@ -1,9 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Clock, RefreshCw } from "lucide-react";
+import { Clock } from "lucide-react";
 import { REPORT_STATUS, type ReportStatusType } from "@/constants/constants";
 import type { ReportType } from "@/features/report/reportTypes";
-import { toast } from "sonner";
 
 export const reportColumns: ColumnDef<ReportType>[] = [
   {
@@ -54,22 +52,22 @@ export const reportColumns: ColumnDef<ReportType>[] = [
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
-  {
-    id: "actions",
-    header: "Actions",
-    size: 100,
-    cell: () => {
-      const handleResend = () => {
-        toast.info("Not Implemented yet! Coming Soon!");
-      }
+  // {
+  //   id: "actions",
+  //   header: "Actions",
+  //   size: 100,
+  //   cell: () => {
+  //     const handleResend = () => {
+  //       toast.info("Not Implemented yet! Coming Soon!");
+  //     }
 
-      return <div className="flex gap-1">
-        <Button size="sm" variant="outline" className="font-normal" onClick={handleResend}>
-          <RefreshCw className="h-4 w-4" />
-          Resend
-        </Button>
-        <div></div>
-      </div>
-    },
-  },
+  //     return <div className="flex gap-1">
+  //       <Button size="sm" variant="outline" className="font-normal" onClick={handleResend}>
+  //         <RefreshCw className="h-4 w-4" />
+  //         Resend
+  //       </Button>
+  //       <div></div>
+  //     </div>
+  //   },
+  // },
 ];

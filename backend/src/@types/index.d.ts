@@ -7,3 +7,8 @@ declare global {
     }
   }
 }
+
+export type SortOptionsType = {
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+};

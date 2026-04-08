@@ -25,3 +25,12 @@ export const REFRESH_TOKEN_COOKIE = "refreshToken";
 
 /** 30 days in milliseconds. */
 export const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
+
+/** OTP Time To Live in milliseconds. (10 Mins) */
+export const OTP_TTL_MS = 10 * 60 * 1000;
+
+/** OTP Max Attempts. */
+export const OTP_MAX_ATTEMPTS = 3;
+
+/** OTP Attempt Window in milliseconds. (1 hour) */
+export const OTP_ATTEMPT_WINDOW_MS = 60 * 60 * 1000;
