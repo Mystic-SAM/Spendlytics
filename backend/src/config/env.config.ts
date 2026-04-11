@@ -23,6 +23,8 @@ const _Env = {
   GOOGLE_REFRESH_TOKEN: getEnv("GOOGLE_REFRESH_TOKEN"),
   GOOGLE_REDIRECT_URI: getEnv("GOOGLE_REDIRECT_URI"),
   GMAIL_SENDER: getEnv("GMAIL_SENDER"),
+
+  CRON_SECRET: getEnv("CRON_SECRET"),
 } as const;
 
 export const Env = Object.freeze(_Env) as typeof _Env;
