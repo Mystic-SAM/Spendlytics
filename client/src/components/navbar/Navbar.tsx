@@ -122,7 +122,7 @@ const Navbar = () => {
             </Sheet>
 
             {/* Right side - User actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center min-[375px]:space-x-4">
               {/* Theme Toggle */}
               <Button
                 variant="ghost"
