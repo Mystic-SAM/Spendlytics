@@ -38,6 +38,6 @@ export const connectDatabase = async (): Promise<void> => {
     Logger.info("Connected to MongoDB database");
   } catch (error) {
     Logger.error("Error connecting to MongoDB database:", error);
-    process.exit(1);
+    throw error;
   }
 };

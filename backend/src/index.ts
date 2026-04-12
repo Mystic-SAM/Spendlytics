@@ -49,6 +49,19 @@ app.use(
   }),
 );
 
+// In production (Serverless), ensure the DB is connected on every request cold start.
+// In development, startServer() handles this upon boot.
+if (Env.NODE_ENV === "production") {
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await connectDatabase();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+}
+
 /* Routes */
 
 /**
