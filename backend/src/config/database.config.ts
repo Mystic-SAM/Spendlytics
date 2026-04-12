@@ -8,10 +8,25 @@ const MONGO_CONNECT_TIMEOUT_MS = 30000;
 
 /**
  * Connects to MongoDB database using credentials from environment config.
- * Validates that MONGO_URI is set before attempting connection.
- * @returns {Promise<void>} Resolves when connected successfully
+ * Caches the connection so serverless re-invocations reuse the existing
+ * connection instead of exhausting the Atlas connection pool.
+ * @returns {Promise<void>} Resolves when connected (or already connected)
  */
 export const connectDatabase = async (): Promise<void> => {
+  // readyState: 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+  if (mongoose.connection.readyState === 1) {
+    Logger.info("Reusing existing MongoDB connection");
+    return;
+  }
+
+  if (mongoose.connection.readyState === 2) {
+    // Wait for the in-progress connection to finish
+    await new Promise<void>((resolve) =>
+      mongoose.connection.once("connected", resolve),
+    );
+    return;
+  }
+
   try {
     await mongoose.connect(Env.MONGO_URI, {
       serverSelectionTimeoutMS: MONGO_SERVER_SELECTION_TIMEOUT_MS,
@@ -23,6 +38,6 @@ export const connectDatabase = async (): Promise<void> => {
     Logger.info("Connected to MongoDB database");
   } catch (error) {
     Logger.error("Error connecting to MongoDB database:", error);
-    process.exit(1);
+    throw error;
   }
 };

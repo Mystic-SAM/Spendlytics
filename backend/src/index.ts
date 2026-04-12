@@ -18,9 +18,10 @@ import passport from "passport";
 import { passportAuthenticateJwt } from "./config/passport.config.js";
 import userRoutes from "./routes/user.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
-import { initializeCrons } from "./crons/index.js";
+import cronRoutes from "./routes/cron.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
+import { cronAuthMiddleware } from "./middlewares/cronAuth.middleware.js";
 
 // Initialize logger (setup file logging and cleanup old logs)
 Logger.initialize();
@@ -47,6 +48,19 @@ app.use(
     credentials: true,
   }),
 );
+
+// In production (Serverless), ensure the DB is connected on every request cold start.
+// In development, startServer() handles this upon boot.
+if (Env.NODE_ENV === "production") {
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await connectDatabase();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+}
 
 /* Routes */
 
@@ -82,6 +96,9 @@ app.use(`${BASE_PATH}/user`, passportAuthenticateJwt, userRoutes);
 app.use(`${BASE_PATH}/transaction`, passportAuthenticateJwt, transactionRoutes);
 app.use(`${BASE_PATH}/report`, passportAuthenticateJwt, reportRoutes);
 app.use(`${BASE_PATH}/analytics`, passportAuthenticateJwt, analyticsRoutes);
+
+// Internal cron endpoints — secured via CRON_SECRET header (triggered by Vercel Cron)
+app.use(`${BASE_PATH}/crons`, cronAuthMiddleware, cronRoutes);
 
 /**
  * 404 handler for undefined routes
@@ -121,10 +138,6 @@ const gracefulShutdown = (
 const startServer = async () => {
   await connectDatabase();
 
-  if (Env.NODE_ENV === "development") {
-    await initializeCrons();
-  }
-
   const server = app.listen(Env.PORT, () => {
     console.log(
       `Server is running on port ${Env.PORT} in ${Env.NODE_ENV} mode.`,
@@ -157,7 +170,15 @@ const startServer = async () => {
   });
 };
 
-startServer().catch((error) => {
-  Logger.error("Failed to start server", error);
-  process.exit(1);
-});
+// In production (Vercel), the app is exported and wrapped as a serverless function.
+// app.listen() is NOT called — Vercel handles the HTTP lifecycle.
+// In development, startServer() boots a real HTTP server as usual.
+if (Env.NODE_ENV !== "production") {
+  startServer().catch((error) => {
+    Logger.error("Failed to start server", error);
+    process.exit(1);
+  });
+}
+
+// Vercel serverless entry point
+export default app;

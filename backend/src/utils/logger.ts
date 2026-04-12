@@ -95,19 +95,36 @@ export class Logger {
   }
 
   /**
+   * Format console prefix string with timestamp, level, and requestId
+   */
+  private static formatConsolePrefix(level: string): string {
+    const timestamp = new Date().toISOString();
+    const requestIdStr = this.currentRequestId ? ` [${this.currentRequestId}]` : "";
+    return `[${timestamp}] ${level}${requestIdStr}:`;
+  }
+
+  /**
    * Log informational messages
    */
   static info(message: string, metadata?: Record<string, any>): void {
-    const logData = this.formatLogData("INFO", message, metadata);
-    FileLogger.writeToFile(logData);
+    if (this.isDevelopment) {
+      const logData = this.formatLogData("INFO", message, metadata);
+      FileLogger.writeToFile(logData);
+    } else {
+      console.info(`${this.formatConsolePrefix("INFO")} ${message}`, metadata || "");
+    }
   }
 
   /**
    * Log warning messages
    */
   static warn(message: string, metadata?: Record<string, any>): void {
-    const logData = this.formatLogData("WARN", message, metadata);
-    FileLogger.writeToFile(logData);
+    if (this.isDevelopment) {
+      const logData = this.formatLogData("WARN", message, metadata);
+      FileLogger.writeToFile(logData);
+    } else {
+      console.warn(`${this.formatConsolePrefix("WARN")} ${message}`, metadata || "");
+    }
   }
 
   /**
@@ -134,19 +151,18 @@ export class Logger {
     const logData = this.formatErrorLog(message, errorMessage, stack, metadata);
 
     // Print to console
-    const requestIdStr = this.currentRequestId
-      ? ` [${this.currentRequestId}]`
-      : "";
     const errorStr = errorMessage ? `\n  Error: ${errorMessage}` : "";
     console.error(
-      `\n[${new Date().toISOString()}] ERROR${requestIdStr}: ${message}${errorStr}`,
+      `\n${this.formatConsolePrefix("ERROR")} ${message}${errorStr}`
     );
     if (stack) {
       console.error("Stack Trace:\n" + stack);
     }
 
-    // Write to file
-    FileLogger.writeToFile(logData);
+    // Write to file only in development
+    if (this.isDevelopment) {
+      FileLogger.writeToFile(logData);
+    }
   }
 
   /**
@@ -163,10 +179,12 @@ export class Logger {
    * Initialize logger (cleanup old logs)
    */
   static initialize(): void {
-    FileLogger.cleanupOldLogs(30);
+    if (this.isDevelopment) {
+      FileLogger.cleanupOldLogs(30);
+    }
     this.info("Logger initialized", {
       environment: Env.NODE_ENV,
-      logsDirectory: "logs/",
+      logsDirectory: this.isDevelopment ? "logs/" : "Vercel Logs",
     });
   }
 }
