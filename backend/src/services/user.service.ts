@@ -1,7 +1,7 @@
 import { UserModel } from "../models/user.model.js";
 import { NotFoundException, UnauthorizedException } from "../utils/app-error.js";
 import { Logger } from "../utils/logger.js";
-import type { UpdateUserType } from "../validators/user.validator.js";
+import type { UpdateUserType, UpdatePasswordType } from "../validators/user.validator.js";
 import { verifyOTP } from "../utils/otp-store.js";
 
 export const findByIdUserService = async (userId: string) => {
@@ -52,4 +52,28 @@ export const updateUserService = async (
     updatedFields: Object.keys(updateData),
   });
   return user.omitPassword();
+};
+
+export const updatePasswordService = async (
+  userId: string,
+  body: UpdatePasswordType,
+) => {
+  Logger.debug("Attempting to update password", { userId });
+
+  const user = await UserModel.findById(userId).select("+password");
+  if (!user) {
+    Logger.error("User not found for password update", { userId });
+    throw new NotFoundException("User not found");
+  }
+
+  const isCurrentPasswordValid = await user.comparePassword(body.currentPassword);
+  if (!isCurrentPasswordValid) {
+    Logger.warn("Incorrect current password provided", { userId });
+    throw new UnauthorizedException("Current password is incorrect");
+  }
+
+  user.password = body.newPassword;
+  await user.save();
+
+  Logger.info("Password updated successfully", { userId });
 };

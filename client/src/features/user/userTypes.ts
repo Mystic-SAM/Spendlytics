@@ -14,3 +14,8 @@ export interface UpdateUserPayload {
   email?: string;
   otp?: string;
 }
+
+export interface UpdatePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
