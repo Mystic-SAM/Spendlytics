@@ -12,7 +12,7 @@ const EditTransactionDrawer = () => {
   const { open, transactionId, onCloseDrawer } = useEditTransactionDrawer();
   return (
     <Drawer open={open} onOpenChange={onCloseDrawer} direction="right">
-      <DrawerContent className="max-w-md overflow-hidden overflow-y-auto">
+      <DrawerContent className="max-w-md">
         <DrawerHeader>
           <DrawerTitle className="text-xl font-semibold">
             Edit Transaction

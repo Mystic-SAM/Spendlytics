@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DrawerFooter } from "@/components/ui/drawer";
 import { Switch } from "@/components/ui/switch";
 import { useAppDispatch, useTypedSelector } from "@/app/hook";
 import { useUpdateReportSettingMutation } from "@/features/report/reportAPI";
@@ -82,115 +83,118 @@ const ScheduleReportForm = ({ onCloseDrawer }: { onCloseDrawer: () => void }) =>
   };
 
   return (
-    <div className="pt-5 px-2.5">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="w-full space-y-6 flex-1 px-4">
-            {/* Enable/Disable Switch */}
-            <FormField
-              control={form.control}
-              name="isEnabled"
-              render={({ field }) => (
-                <FormItem
-                  className="flex flex-row items-center justify-between 
+    <>
+      <div className="flex-1 overflow-y-auto pt-5 px-2.5 pb-4" data-vaul-no-drag>
+        <Form {...form}>
+          <form id="schedule-report-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="w-full space-y-6 flex-1 px-4">
+              {/* Enable/Disable Switch */}
+              <FormField
+                control={form.control}
+                name="isEnabled"
+                render={({ field }) => (
+                  <FormItem
+                    className="flex flex-row items-center justify-between 
                 rounded-lg border p-4"
-                >
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Monthly Reports</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      {form.watch("isEnabled") ? "Reports activated" : "Reports deactivated"}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="relative space-y-6">
-              {/* Email Field */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <FormControl>
-                        <Input
-                          placeholder="Enter email address"
-                          disabled={true}
-                          {...field}
-                          className="flex-1"
-                        />
-                      </FormControl>
+                  >
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Monthly Reports</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        {form.watch("isEnabled") ? "Reports activated" : "Reports deactivated"}
+                      </p>
                     </div>
-                    <FormMessage />
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />
 
-              {/* Frequency */}
-              <FormField
-                control={form.control}
-                name="frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Repeat On</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={true}
-                    >
-                      <FormControl className="w-full">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="MONTHLY">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              <div className="relative space-y-6">
+                {/* Email Field */}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input
+                            placeholder="Enter email address"
+                            disabled={true}
+                            {...field}
+                            className="flex-1"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Frequency */}
+                <FormField
+                  control={form.control}
+                  name="frequency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Repeat On</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={true}
+                      >
+                        <FormControl className="w-full">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select frequency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="MONTHLY">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Disabled overlay */}
+                {!form.watch("isEnabled") && (
+                  <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-10" />
                 )}
-              />
+              </div>
 
-              {/* Disabled overlay */}
-              {!form.watch("isEnabled") && (
-                <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-10" />
-              )}
+              {/* Schedule Summary */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h3 className="font-medium mb-2">Schedule Summary</h3>
+                <p className="text-sm text-muted-foreground">
+                  {getScheduleSummary()}
+                </p>
+              </div>
+
+
             </div>
+          </form>
+        </Form>
+      </div>
 
-            {/* Schedule Summary */}
-            <div className="bg-muted p-4 rounded-lg">
-              <h3 className="font-medium mb-2">Schedule Summary</h3>
-              <p className="text-sm text-muted-foreground">
-                {getScheduleSummary()}
-              </p>
-            </div>
-
-
-            {/* Submit Button */}
-            <div className="sticky bottom-0 py-2 z-50">
-              <Button
-                type="submit"
-                disabled={isLoading || reportSetting?.isEnabled === form.watch("isEnabled")}
-                className="w-full text-white"
-              >
-                {isLoading && <Loader className="h-4 w-4 animate-spin" />}
-                Save changes
-              </Button>
-            </div>
-          </div>
-        </form>
-      </Form>
-    </div>
+      <DrawerFooter className="px-6 py-3">
+        <Button
+          type="submit"
+          form="schedule-report-form"
+          disabled={isLoading || reportSetting?.isEnabled === form.watch("isEnabled")}
+          className="w-full text-white"
+        >
+          {isLoading && <Loader className="h-4 w-4 animate-spin mr-2" />}
+          Save changes
+        </Button>
+      </DrawerFooter>
+    </>
   );
 };
 

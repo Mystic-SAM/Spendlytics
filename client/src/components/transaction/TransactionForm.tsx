@@ -25,6 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { DrawerFooter } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
@@ -143,282 +144,285 @@ const TransactionForm = (props: {
   };
 
   return (
-    <div className="relative pt-5 px-2.5">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-4">
-          <div className="space-y-6">
-            {/* Transaction Type */}
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Transaction Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl className="w-full">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select transaction type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {TRANSACTION_CATEGORY_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Title */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="!font-normal">Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Transaction title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Amount */}
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <CurrencyInputField
-                        {...field}
-                        onValueChange={(value) => field.onChange(value || "")}
-                        placeholder="₹0.00"
-                        prefix="₹"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Category */}
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => {
-                const getCategoryOption = () => {
-                  if (!field.value) return undefined;
-                  const found = CATEGORIES.find(opt => opt.value === field.value);
-                  return found || { value: field.value, label: field.value };
-                };
-
-                return (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <SingleSelector
-                      value={getCategoryOption()}
-                      onChange={(option) => field.onChange(option.value)}
-                      options={CATEGORIES}
-                      placeholder="Select or type a category"
-                      creatable
-                    />
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            />
-
-            {/* Date */}
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
-                  <Popover modal={false}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP", { locale: enIN })
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-auto p-0 !pointer-events-auto"
-                      align="start"
-                    >
-                      <CalendarComponent
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < MIN_TRANSACTION_DATE}
-                        autoFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Payment Method */}
-            <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Method</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl className="w-full">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isRecurring"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-[14.5px]">
-                      Recurring Transaction
-                    </FormLabel>
-                    <p className="text-xs text-muted-foreground">
-                      {field.value
-                        ? "This will repeat automatically"
-                        : "Set recurring to repeat this transaction"}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      className="cursor-pointer"
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        if (checked) {
-                          form.setValue(
-                            "frequency",
-                            TRANSACTION_FREQUENCY.DAILY,
-                          );
-                        } else {
-                          form.setValue("frequency", null);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {form.watch("isRecurring") && form.getValues().isRecurring && (
+    <>
+      <div className="flex-1 overflow-y-auto pt-5 px-2.5 pb-4" data-vaul-no-drag>
+        <Form {...form}>
+          <form id="transaction-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-4">
+            <div className="space-y-6">
+              {/* Transaction Type */}
               <FormField
                 control={form.control}
-                name="frequency"
+                name="type"
                 render={({ field }) => (
-                  <FormItem className="recurring-control">
-                    <FormLabel>Frequency</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value ?? undefined}
-                    >
+                  <FormItem>
+                    <FormLabel>Transaction Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl className="w-full">
-                        <SelectTrigger className="!capitalize">
-                          <SelectValue placeholder="Select frequency" />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select transaction type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {TRANSACTION_FREQUENCY_OPTIONS.map(
-                          ({ value, label }) => (
-                            <SelectItem
-                              key={value}
-                              value={value}
-                              className="!capitalize"
-                            >
-                              {label}
-                            </SelectItem>
-                          ),
-                        )}
+                        {TRANSACTION_CATEGORY_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add notes about this transaction"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
-          <div className="sticky bottom-0 bg-white dark:bg-background pb-2">
-            <Button
-              type="submit"
-              className="w-full !text-white"
-              disabled={isCreating || isUpdating}
-            >
-              {(isCreating || isUpdating) && (
-                <Loader className="h-4 w-4 animate-spin" />
-              )}
-              {isEdit ? "Update" : "Save"}
-            </Button>
-          </div>
+              {/* Title */}
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="!font-normal">Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Transaction title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {isLoading && (
-            <div className="absolute top-0 left-0 right-0 bottom-0 bg-white/70 dark:bg-background/70 z-50 flex justify-center">
-              <Loader className="h-8 w-8 animate-spin" />
+              {/* Amount */}
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <CurrencyInputField
+                          {...field}
+                          onValueChange={(value) => field.onChange(value || "")}
+                          placeholder="₹0.00"
+                          prefix="₹"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Category */}
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => {
+                  const getCategoryOption = () => {
+                    if (!field.value) return undefined;
+                    const found = CATEGORIES.find(opt => opt.value === field.value);
+                    return found || { value: field.value, label: field.value };
+                  };
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <SingleSelector
+                        value={getCategoryOption()}
+                        onChange={(option) => field.onChange(option.value)}
+                        options={CATEGORIES}
+                        placeholder="Select or type a category"
+                        creatable
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              {/* Date */}
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover modal={false}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: enIN })
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto p-0 !pointer-events-auto"
+                        align="start"
+                      >
+                        <CalendarComponent
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date < MIN_TRANSACTION_DATE}
+                          autoFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Payment Method */}
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl className="w-full">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PAYMENT_METHODS.map((method) => (
+                          <SelectItem key={method.value} value={method.value}>
+                            {method.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isRecurring"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-[14.5px]">
+                        Recurring Transaction
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        {field.value
+                          ? "This will repeat automatically"
+                          : "Set recurring to repeat this transaction"}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        className="cursor-pointer"
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (checked) {
+                            form.setValue(
+                              "frequency",
+                              TRANSACTION_FREQUENCY.DAILY,
+                            );
+                          } else {
+                            form.setValue("frequency", null);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("isRecurring") && form.getValues().isRecurring && (
+                <FormField
+                  control={form.control}
+                  name="frequency"
+                  render={({ field }) => (
+                    <FormItem className="recurring-control">
+                      <FormLabel>Frequency</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value ?? undefined}
+                      >
+                        <FormControl className="w-full">
+                          <SelectTrigger className="!capitalize">
+                            <SelectValue placeholder="Select frequency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TRANSACTION_FREQUENCY_OPTIONS.map(
+                            ({ value, label }) => (
+                              <SelectItem
+                                key={value}
+                                value={value}
+                                className="!capitalize"
+                              >
+                                {label}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Add notes about this transaction"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
+          </form>
+        </Form>
+      </div>
+
+      <DrawerFooter className="px-6 py-3">
+        <Button
+          type="submit"
+          form="transaction-form"
+          className="w-full !text-white"
+          disabled={isCreating || isUpdating}
+        >
+          {(isCreating || isUpdating) && (
+            <Loader className="h-4 w-4 animate-spin mr-2" />
           )}
-        </form>
-      </Form>
-    </div>
+          {isEdit ? "Update" : "Save"}
+        </Button>
+      </DrawerFooter>
+
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/70 dark:bg-background/70 z-50 flex items-center justify-center">
+          <Loader className="h-8 w-8 animate-spin" />
+        </div>
+      )}
+    </>
   );
 };
 
