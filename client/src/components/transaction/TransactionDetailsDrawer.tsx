@@ -97,8 +97,8 @@ const TransactionDetailsDrawer = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose} direction="right">
-      <DrawerContent className="max-w-md overflow-hidden overflow-y-auto">
-        <DrawerHeader className="pb-2">
+      <DrawerContent className="max-w-md">
+        <DrawerHeader className="pb-2 shrink-0">
           <DrawerTitle className="text-xl font-semibold">
             Transaction Details
           </DrawerTitle>
@@ -107,8 +107,9 @@ const TransactionDetailsDrawer = ({
           </DrawerDescription>
         </DrawerHeader>
 
-        {/* Amount Hero Section */}
-        <div className="px-4 pb-4">
+        <div className="flex-1 overflow-y-auto" data-vaul-no-drag>
+          {/* Amount Hero Section */}
+          <div className="px-4 pb-4">
           <div className="rounded-xl border bg-muted/40 p-4 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span
@@ -221,7 +222,8 @@ const TransactionDetailsDrawer = ({
             )}
         </div>
 
-        <div className="h-6" />
+          <div className="h-6" />
+        </div>
       </DrawerContent>
     </Drawer>
   );
