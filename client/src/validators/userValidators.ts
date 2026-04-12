@@ -1,4 +1,5 @@
 import z from "zod";
+import { passwordSchema } from "./authValidators";
 
 export const accountFormSchema = z
   .object({
@@ -16,4 +17,15 @@ export const accountFormSchema = z
   })
   .refine((data) => data.name || data.email, {
     message: "At least one field (name or email) must be provided for update",
+  });
+
+export const updatePasswordSchema = z
+  .object({
+    currentPassword: passwordSchema,
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, { message: "Please confirm your new password" }),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });

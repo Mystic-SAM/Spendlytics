@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "./auth.validator.js";
 
 export const updateUserSchema = z
   .object({
@@ -10,4 +11,12 @@ export const updateUserSchema = z
     message: "At least one field (name or email) must be provided for update",
   });
 
+export const updatePasswordSchema = z
+  .object({
+    currentPassword: passwordSchema,
+    newPassword: passwordSchema,
+  });
+
 export type UpdateUserType = z.infer<typeof updateUserSchema>;
+
+export type UpdatePasswordType = z.infer<typeof updatePasswordSchema>;
