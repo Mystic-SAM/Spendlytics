@@ -20,8 +20,8 @@ export const getDateRange = (
 ) => {
   if (customFrom && customTo) {
     return {
-      from: customFrom,
-      to: customTo,
+      from: new Date(customFrom),
+      to: endOfDay(new Date(customTo)),
       value: DateRangeEnum.CUSTOM,
     };
   }
