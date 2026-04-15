@@ -98,23 +98,31 @@ const sendReportWithErrorHandling = async (
     Logger.info("Attempting to send report email", {
       userId: user._id.toString(),
       frequency,
+      hasExcel: !!report.excelBuffer,
     });
+
+    // Extract excelBuffer from report object
+    const { excelBuffer, ...reportData } = report;
+
     await sendReportEmail({
       email: user.email!,
       username: user.name!,
       report: {
-        period: report.period,
-        totalIncome: report.summary.income,
-        totalExpenses: report.summary.expenses,
-        availableBalance: report.summary.balance,
-        savingsRate: report.summary.savingsRate,
-        topSpendingCategories: report.summary.topCategories,
-        insights: report.insights,
+        period: reportData.period,
+        totalIncome: reportData.summary.income,
+        totalExpenses: reportData.summary.expenses,
+        availableBalance: reportData.summary.balance,
+        savingsRate: reportData.summary.savingsRate,
+        topSpendingCategories: reportData.summary.topCategories,
+        insights: reportData.insights,
       },
       frequency,
+      excelBuffer, // Pass the Excel buffer to the mailer
     });
+
     Logger.info("Report email sent successfully", {
       userId: user._id.toString(),
+      hasAttachment: !!excelBuffer,
     });
     return true;
   } catch (error) {

@@ -108,3 +108,10 @@ export function capitalizeFirstLetter(string: string): string {
   if (!string || string.length === 0) return string;
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
+
+/**
+ * Generates a sanitized filename for the report Excel file
+ */
+export const generateExcelFilename = (period: string): string => {
+  return `Financial Report ${period}.xlsx`;
+};
