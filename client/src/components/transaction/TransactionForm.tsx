@@ -49,7 +49,7 @@ import {
 import { transactionFormSchema } from "@/validators/transactionValidators";
 import { format } from "date-fns";
 import { enIN } from "date-fns/locale";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type FormValues = z.infer<typeof transactionFormSchema>;
 
@@ -59,6 +59,7 @@ const TransactionForm = (props: {
   onCloseDrawer?: () => void;
 }) => {
   const { onCloseDrawer, isEdit = false, transactionId } = props;
+  const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
   const { data, isLoading } = useGetSingleTransactionQuery(
     transactionId || "",
@@ -246,7 +247,7 @@ const TransactionForm = (props: {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date</FormLabel>
-                    <Popover modal={false}>
+                    <Popover modal={false} open={isDatePopoverOpen} onOpenChange={setIsDatePopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -272,7 +273,10 @@ const TransactionForm = (props: {
                         <CalendarComponent
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setIsDatePopoverOpen(false);
+                          }}
                           disabled={(date) => date < MIN_TRANSACTION_DATE}
                           autoFocus
                         />
