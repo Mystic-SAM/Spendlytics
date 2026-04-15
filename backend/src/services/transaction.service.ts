@@ -106,7 +106,10 @@ export const getAllTransactionService = async (
   const { pageSize, pageNumber } = pagination;
   const skip = (pageNumber - 1) * pageSize;
 
-  const sortObject: Record<string, SortOrder> = {[sortOptions.sortBy]: sortOptions.sortOrder};
+  const sortObject: Record<string, SortOrder> = {
+    [sortOptions.sortBy]: sortOptions.sortOrder,
+    createdAt: 1, // Secondary sort: latest created transactions first
+  };
 
   const [transactions, totalCount] = await Promise.all([
     TransactionModel.find(filterConditions)

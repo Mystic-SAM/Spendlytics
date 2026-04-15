@@ -2,6 +2,7 @@ import {
   endOfDay,
   endOfMonth,
   endOfYear,
+  startOfDay,
   startOfMonth,
   startOfYear,
   subDays,
@@ -20,7 +21,7 @@ export const getDateRange = (
 ) => {
   if (customFrom && customTo) {
     return {
-      from: new Date(customFrom),
+      from: startOfDay(new Date(customFrom)),
       to: endOfDay(new Date(customTo)),
       value: DateRangeEnum.CUSTOM,
     };
