@@ -51,4 +51,5 @@ export const importTransactionSchema = z.object({
       message: `Payment method must be one of: ${Object.values(PAYMENT_METHODS_ENUM).join(", ")}`,
     })
   ]).transform((val) => (val === "" ? undefined : val)).optional(),
+  description: z.string().optional(),
 });
