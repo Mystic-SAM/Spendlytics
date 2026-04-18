@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import SuperAdminRoute from "./SuperAdminRoute";
 import AppLayout from "@/layouts/AppLayout";
 import useAuthExpiration from "@/hooks/useAuthExpiration";
+import ErrorPage from "@/pages/error/ErrorPage";
 
 const AppRouter = () => {
   const routes: RouteObject[] = [
@@ -46,7 +47,7 @@ const AppRouter = () => {
     // Catch-all for undefined routes
     {
       path: "*",
-      element: <>404</>,
+      element: <ErrorPage isNotFoundPage />,
     },
   ];
   return useRoutes(routes);

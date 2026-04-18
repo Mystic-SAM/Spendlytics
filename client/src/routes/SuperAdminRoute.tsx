@@ -1,6 +1,6 @@
 import { useTypedSelector } from "@/app/hook";
-import { Navigate, Outlet } from "react-router-dom";
-import { PROTECTED_ROUTES } from "./common/routePath";
+import { Outlet } from "react-router-dom";
+import ErrorPage from "@/pages/error/ErrorPage";
 
 /**
  * Route guard for super-admin-only pages.
@@ -14,7 +14,7 @@ const SuperAdminRoute = () => {
 
   if (accessToken && user?.isSuperAdmin) return <Outlet />;
 
-  return <Navigate to={PROTECTED_ROUTES.DASHBOARD} replace />;
+  return <ErrorPage isNotFoundPage />;
 };
 
 export default SuperAdminRoute;
