@@ -1,8 +1,9 @@
 import { BrowserRouter, useRoutes, type RouteObject } from "react-router-dom";
 import AuthRoute from "./AuthRoute";
-import { authenticationRoutePaths, protectedRoutePaths } from "./common/routes";
+import { authenticationRoutePaths, protectedRoutePaths, superAdminRoutePaths } from "./common/routes";
 import BaseLayout from "@/layouts/BaseLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import SuperAdminRoute from "./SuperAdminRoute";
 import AppLayout from "@/layouts/AppLayout";
 import useAuthExpiration from "@/hooks/useAuthExpiration";
 
@@ -20,13 +21,24 @@ const AppRouter = () => {
       ],
     },
 
-    // Protected Routes
+    // Protected Routes (Regular users)
     {
       element: <ProtectedRoute />,
       children: [
         {
           element: <AppLayout />,
           children: protectedRoutePaths,
+        },
+      ],
+    },
+
+    // Super Admin Route — gated by SuperAdminRoute (403 → /dashboard)
+    {
+      element: <SuperAdminRoute />,
+      children: [
+        {
+          element: <AppLayout />,
+          children: superAdminRoutePaths,
         },
       ],
     },
