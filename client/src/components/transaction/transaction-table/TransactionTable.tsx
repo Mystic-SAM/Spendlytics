@@ -5,8 +5,8 @@ import useDebouncedSearch from "@/hooks/useDebounceSearch";
 import { useState } from "react";
 import { transactionColumns } from "./transactionColumns";
 import { DateRangeEnum, DateRangeSelect, type DateRangeType } from "@/components/DateRangeSelect";
-import { format } from "date-fns";
 import type { SortingState } from "@tanstack/react-table";
+import { formatDateToShort } from "@/lib/utils";
 
 type FilterType = {
   type?: TransactionCategoryType | undefined;
@@ -54,8 +54,8 @@ const TransactionTable = (props: {
     if (dateRange.value === DateRangeEnum.CUSTOM && dateRange.from && dateRange.to) {
       return {
         dateRangePreset: DateRangeEnum.CUSTOM,
-        customFrom: format(dateRange.from, "yyyy-MM-dd"),
-        customTo: format(dateRange.to, "yyyy-MM-dd"),
+        customFrom: formatDateToShort(dateRange.from),
+        customTo: formatDateToShort(dateRange.to),
       };
     }
 
@@ -114,6 +114,11 @@ const TransactionTable = (props: {
     }));
   };
 
+  const handleDateRangeChange = (newDateRange: DateRangeType) => {
+    setDateRange(newDateRange);
+    handlePageChange(1);
+  };
+
   const handlePageChange = (pageNumber: number) => {
     setFilter((prev) => ({ ...prev, pageNumber }));
   };
@@ -158,7 +163,7 @@ const TransactionTable = (props: {
         isShowDateFilter ? (
           <DateRangeSelect
             dateRange={dateRange}
-            setDateRange={setDateRange}
+            setDateRange={handleDateRangeChange}
             defaultRange={DateRangeEnum.ALL_TIME}
             showCustom
           />

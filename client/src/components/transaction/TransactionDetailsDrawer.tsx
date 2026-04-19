@@ -6,7 +6,6 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
 import { formatCurrency } from "@/lib/formatCurrency";
 import {
   PAYMENT_METHODS,
@@ -14,7 +13,7 @@ import {
   TRANSACTION_FREQUENCY_OPTIONS,
 } from "@/constants/constants";
 import type { TransactionType } from "@/features/transaction/transactionTypes";
-import { cn } from "@/lib/utils";
+import { cn, formatDateLocalized } from "@/lib/utils";
 import {
   CalendarDays,
   CircleDot,
@@ -147,7 +146,7 @@ const TransactionDetailsDrawer = ({
           <DetailRow
             icon={<CalendarDays className="h-4 w-4" />}
             label="Transaction Date"
-            value={format(date, "MMMM dd, yyyy")}
+            value={formatDateLocalized(date)}
           />
 
           <DetailRow
@@ -182,13 +181,13 @@ const TransactionDetailsDrawer = ({
                   {nextRecurringDate && (
                     <span className="text-xs text-muted-foreground font-normal">
                       Next:{" "}
-                      {format(nextRecurringDate, "MMM dd, yyyy")}
+                      {formatDateLocalized(nextRecurringDate)}
                     </span>
                   )}
                   {lastProcessed && (
                     <span className="text-xs text-muted-foreground font-normal">
                       Last processed:{" "}
-                      {format(lastProcessed, "MMM dd, yyyy")}
+                      {formatDateLocalized(lastProcessed)}
                     </span>
                   )}
                 </div>
@@ -209,7 +208,7 @@ const TransactionDetailsDrawer = ({
           <DetailRow
             icon={<Clock className="h-4 w-4" />}
             label="Created At"
-            value={format(createdAt, "MMM dd, yyyy · hh:mm a")}
+            value={formatDateLocalized(createdAt)}
           />
 
           {updatedAt &&
@@ -217,7 +216,7 @@ const TransactionDetailsDrawer = ({
               <DetailRow
                 icon={<Clock className="h-4 w-4" />}
                 label="Last Updated"
-                value={format(updatedAt, "MMM dd, yyyy · hh:mm a")}
+                value={formatDateLocalized(updatedAt)}
               />
             )}
         </div>

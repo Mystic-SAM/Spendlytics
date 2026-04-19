@@ -26,7 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { DrawerFooter } from "@/components/ui/drawer";
-import { cn } from "@/lib/utils";
+import { cn, formatDateLocalized } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   TRANSACTION_FREQUENCY,
@@ -47,8 +47,6 @@ import {
   useUpdateTransactionMutation,
 } from "@/features/transaction/transactionAPI";
 import { transactionFormSchema } from "@/validators/transactionValidators";
-import { format } from "date-fns";
-import { enIN } from "date-fns/locale";
 import { useEffect, useState } from "react";
 
 type FormValues = z.infer<typeof transactionFormSchema>;
@@ -258,7 +256,7 @@ const TransactionForm = (props: {
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP", { locale: enIN })
+                              formatDateLocalized(field.value)
                             ) : (
                               <span>Pick a date</span>
                             )}

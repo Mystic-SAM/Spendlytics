@@ -9,7 +9,6 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,7 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { PAYMENT_METHODS, TRANSACTION_CATEGORY, TRANSACTION_FREQUENCY } from "@/constants/constants";
 import type { TransactionType } from "@/features/transaction/transactionTypes";
-import { cn } from "@/lib/utils";
+import { cn, formatDateLocalized, formatDateToShort } from "@/lib/utils";
 import useEditTransactionDrawer from "@/hooks/useEditTransactionDrawer";
 import { useDuplicateTransactionMutation } from "@/features/transaction/transactionAPI";
 import { toast } from "sonner";
@@ -63,23 +62,45 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  // {
-  //   accessorKey: "createdAt",
-  //   header: ({ column }) => (
-  //     <Button
-  //       variant="ghost"
-  //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //     >
-  //       Date Created
-  //       <SortIcon column={column} />
-  //     </Button>
-  //   ),
-  //   cell: ({ row }) => format(row.getValue("createdAt"), "MMM dd, yyyy"),
-  // },
   {
     accessorKey: "title",
     header: "Title",
     cell: ({ row }) => (<div className="w-[100px] sm480:w-[150px] sm:w-[200px]">{row.getValue("title")}</div>),
+  },
+  {
+    accessorKey: "amount",
+    header: () => <div className="text-right">Amount</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("amount"));
+      const type = row.getValue("type");
+
+      return (
+        <div
+          className={cn("text-right font-medium whitespace-nowrap", {
+            "text-green-600": type === TRANSACTION_CATEGORY.INCOME,
+            "text-destructive": type === TRANSACTION_CATEGORY.EXPENSE,
+            "text-blue-800": type === TRANSACTION_CATEGORY.INVESTMENT,
+          })}
+        >
+          {type === TRANSACTION_CATEGORY.INCOME ? "+" : "-"}
+          {formatCurrency(amount)}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "date",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        className="w-full"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Transaction Date
+        <SortIcon column={column} />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{formatDateLocalized(row.original.date)}</div>,
   },
   {
     accessorKey: "type",
@@ -115,41 +136,6 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-      const type = row.getValue("type");
-
-      return (
-        <div
-          className={cn("text-right font-medium whitespace-nowrap", {
-            "text-green-600": type === TRANSACTION_CATEGORY.INCOME,
-            "text-destructive": type === TRANSACTION_CATEGORY.EXPENSE,
-            "text-blue-800": type === TRANSACTION_CATEGORY.INVESTMENT,
-          })}
-        >
-          {type === TRANSACTION_CATEGORY.INCOME ? "+" : "-"}
-          {formatCurrency(amount)}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "date",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        className="w-full"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Transaction Date
-        <SortIcon column={column} />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="text-center">{format(row.original.date, "MMM dd, yyyy")}</div>,
   },
   {
     accessorKey: "category",
@@ -217,7 +203,7 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
             <span>{label}</span>
             {nextDate && isRecurring && (
               <span className="text-xs text-muted-foreground">
-                Next: {format(nextDate, "MMM dd yyyy")}
+                Next: {formatDateToShort(nextDate)}
               </span>
             )}
           </div>
