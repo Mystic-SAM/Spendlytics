@@ -2,14 +2,14 @@ import ExcelJS from "exceljs";
 import { Logger } from "./logger.js";
 import type { TransactionDocument } from "../models/transaction.model.js";
 
-interface SummaryData {
+export interface SummaryData {
   totalIncome: number;
   totalExpenses: number;
   totalInvestment: number;
-  availableBalance: number;
-  savingsRate: number;
-  categories: Record<string, { amount: number; percentage: number }>;
-  period: string;
+  availableBalance?: number;
+  savingsRate?: number;
+  categories?: Record<string, { amount: number; percentage: number }>;
+  period?: string;
 }
 
 /**
@@ -184,7 +184,7 @@ const createSummarySheet = (
 
   // Title section
   const titleCell = worksheet.getCell(`A${currentRow}`);
-  titleCell.value = "Financial Report Summary";
+  titleCell.value = summary.categories ? "Financial Report Summary" : "Financial Summary";
   titleCell.font = {
     bold: true,
     size: 14,
@@ -194,11 +194,13 @@ const createSummarySheet = (
   currentRow++;
 
   // Period section
-  const periodCell = worksheet.getCell(`A${currentRow}`);
-  periodCell.value = "Period";
-  periodCell.font = { bold: true };
-  worksheet.getCell(`B${currentRow}`).value = summary.period;
-  currentRow++;
+  if (summary.period) {
+    const periodCell = worksheet.getCell(`A${currentRow}`);
+    periodCell.value = "Period";
+    periodCell.font = { bold: true };
+    worksheet.getCell(`B${currentRow}`).value = summary.period;
+    currentRow++;
+  }
 
   // Add spacing
   currentRow++;
@@ -229,9 +231,14 @@ const createSummarySheet = (
     { label: "Total Income", value: summary.totalIncome },
     { label: "Total Expenses", value: summary.totalExpenses },
     { label: "Total Investment", value: summary.totalInvestment },
-    { label: "Available Balance", value: summary.availableBalance },
-    { label: "Savings Rate (%)", value: summary.savingsRate },
   ];
+
+  if (summary.availableBalance !== undefined) {
+    metricsData.push({ label: "Available Balance", value: summary.availableBalance });
+  }
+  if (summary.savingsRate !== undefined) {
+    metricsData.push({ label: "Savings Rate (%)", value: summary.savingsRate });
+  }
 
   for (const metric of metricsData) {
     const labelCell = worksheet.getCell(`A${currentRow}`);
@@ -252,73 +259,78 @@ const createSummarySheet = (
     currentRow++;
   }
 
-  // Add spacing
-  currentRow++;
-
-  // Top spending categories section
-  const categoriesHeader = worksheet.getCell(`A${currentRow}`);
-  categoriesHeader.value = "Top Spending Categories";
-  categoriesHeader.font = {
-    bold: true,
-    size: 12,
-    color: { argb: "FFFFFFFF" },
-  };
-  categoriesHeader.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF70AD47" }, // Green
-  };
-  worksheet.getCell(`B${currentRow}`).value = "";
-  worksheet.getCell(`B${currentRow}`).fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF70AD47" },
-  };
-  currentRow++;
-
-  // Category table header
-  const categoryLabelCell = worksheet.getCell(`A${currentRow}`);
-  categoryLabelCell.value = "Category";
-  categoryLabelCell.font = { bold: true };
-  categoryLabelCell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFE2EFDA" },
-  };
-
-  const categoryValueCell = worksheet.getCell(`B${currentRow}`);
-  categoryValueCell.value = "Amount / Percentage";
-  categoryValueCell.font = { bold: true };
-  categoryValueCell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFE2EFDA" },
-  };
-  currentRow++;
-
-  // Category data
-  const categoryEntries = Object.entries(summary.categories).sort(
-    ([, a], [, b]) => b.amount - a.amount,
-  );
-
-  for (const [category, data] of categoryEntries) {
-    const catCell = worksheet.getCell(`A${currentRow}`);
-    catCell.value = category;
-    catCell.alignment = { horizontal: "left" };
-
-    const amountPercentageCell = worksheet.getCell(`B${currentRow}`);
-    amountPercentageCell.value = `₹${data.amount.toFixed(2)} (${data.percentage}%)`;
-    amountPercentageCell.alignment = { horizontal: "right" };
-
+  if (summary.categories) {
+    // Add spacing
     currentRow++;
+
+    // Top spending categories section
+    const categoriesHeader = worksheet.getCell(`A${currentRow}`);
+    categoriesHeader.value = "Top Spending Categories";
+    categoriesHeader.font = {
+      bold: true,
+      size: 12,
+      color: { argb: "FFFFFFFF" },
+    };
+    categoriesHeader.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF70AD47" }, // Green
+    };
+    worksheet.getCell(`B${currentRow}`).value = "";
+    worksheet.getCell(`B${currentRow}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF70AD47" },
+    };
+    currentRow++;
+
+    // Category table header
+    const categoryLabelCell = worksheet.getCell(`A${currentRow}`);
+    categoryLabelCell.value = "Category";
+    categoryLabelCell.font = { bold: true };
+    categoryLabelCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2EFDA" },
+    };
+
+    const categoryValueCell = worksheet.getCell(`B${currentRow}`);
+    categoryValueCell.value = "Amount / Percentage";
+    categoryValueCell.font = { bold: true };
+    categoryValueCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2EFDA" },
+    };
+    currentRow++;
+
+    // Category data
+    const categoryEntries = Object.entries(summary.categories).sort(
+      ([, a], [, b]) => b.amount - a.amount,
+    );
+
+    for (const [category, data] of categoryEntries) {
+      const catCell = worksheet.getCell(`A${currentRow}`);
+      catCell.value = category;
+      catCell.alignment = { horizontal: "left" };
+
+      const amountPercentageCell = worksheet.getCell(`B${currentRow}`);
+      amountPercentageCell.value = `₹${data.amount.toFixed(2)} (${data.percentage}%)`;
+      amountPercentageCell.alignment = { horizontal: "right" };
+
+      currentRow++;
+    }
   }
 
   // Apply borders to all data cells
-  for (let row = 1; row <= currentRow; row++) {
+  for (let row = 1; row <= currentRow - 1; row++) {
     const cellA = worksheet.getCell(`A${row}`);
     const cellB = worksheet.getCell(`B${row}`);
 
     [cellA, cellB].forEach((cell) => {
+      // Skip styling if the row is purely for empty spacing (no values in A or B)
+      if (!cellA.value && !cellB.value && !cellA.fill) return;
+
       cell.border = {
         top: { style: "thin", color: { argb: "FFD3D3D3" } },
         left: { style: "thin", color: { argb: "FFD3D3D3" } },
@@ -330,7 +342,7 @@ const createSummarySheet = (
 
   Logger.debug("Summary sheet created successfully", {
     metricsCount: metricsData.length,
-    categoriesCount: Object.keys(summary.categories).length,
+    categoriesCount: summary.categories ? Object.keys(summary.categories).length : 0,
   });
 };
 

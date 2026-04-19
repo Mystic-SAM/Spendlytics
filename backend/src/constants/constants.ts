@@ -21,6 +21,8 @@ export const APP_CONSTANTS = {
 
   /** Excel MIME type for generated reports */
   EXCEL_MIME_TYPE: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+  MAX_TRANSACTIONS_EXPORT_LIMIT: 300,
 } as const;
 
 /** Cookie name used for the refresh token. */

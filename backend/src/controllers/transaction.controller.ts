@@ -2,11 +2,12 @@ import { HTTP_STATUS } from "../config/http.config.js";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
 import type { Request, Response } from "express";
 import { bulkDeleteTransactionSchema, bulkInsertTransactionSchema, createTransactionSchema, transactionIdSchema, updateTransactionSchema } from "../validators/transaction.validator.js";
-import { bulkDeleteTransactionService, bulkInsertTransactionService, createTransactionService, deleteTransactionService, duplicateTransactionService, getAllTransactionService, getTransactionByIdService, updateTransactionService } from "../services/transaction.service.js";
+import { bulkDeleteTransactionService, bulkInsertTransactionService, createTransactionService, deleteTransactionService, duplicateTransactionService, getAllTransactionService, getTransactionByIdService, updateTransactionService, exportTransactionsExcelService } from "../services/transaction.service.js";
 import { Logger } from "../utils/logger.js";
 import type { RecurringStatus, TransactionType } from "../enums/model-enums.js";
 import type { DateRangePreset } from "../enums/date-range.enum.js";
 import type { SortOptionsType } from "../@types/index.js";
+import { APP_CONSTANTS } from "../constants/constants.js";
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_PAGE_NUMBER = 1;
@@ -159,5 +160,47 @@ export const bulkInsertTransactionController = asyncHandler(
       message: "Bulk transactions inserted successfully",
       ...result,
     });
+  }
+);
+
+export const downloadTransactionsExcelController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id as string;
+
+    const { keyword, type, recurringStatus, preset, from, to, sortBy, sortOrder } = req.query;
+
+    const filters = {
+      keyword: keyword as string | undefined,
+      type: type as TransactionType | undefined,
+      recurringStatus: recurringStatus as RecurringStatus | undefined,
+      dateRangePreset: preset as DateRangePreset | undefined,
+      customFrom: from ? new Date(from as string) : undefined,
+      customTo: to ? new Date(to as string) : undefined,
+    };
+
+    const sortOptions: SortOptionsType = {
+      sortBy: (sortBy as string) || DEFAULT_SORT_BY,
+      sortOrder: ((sortOrder as string) || DEFAULT_SORT_ORDER) as SortOptionsType["sortOrder"],
+    };
+
+    Logger.debug("downloadTransactionsExcelController: Fetching transactions for export", {
+      userId,
+      filters,
+      sortOptions,
+    });
+
+    const { buffer } = await exportTransactionsExcelService(
+      userId,
+      filters,
+      sortOptions
+    );
+
+    const filename = `Spendlytics_Transactions.xlsx`;
+
+    res.setHeader("Content-Type", APP_CONSTANTS.EXCEL_MIME_TYPE);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", buffer.length);
+
+    return res.status(HTTP_STATUS.OK).send(buffer);
   }
 );
