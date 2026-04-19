@@ -9,6 +9,7 @@ import {
   NotFoundException,
 } from "../utils/app-error.js";
 import { Logger } from "../utils/logger.js";
+import { escapeRegexChars } from "../utils/helper.js";
 import type { GetAllUsersQueryType } from "../validators/admin.validator.js";
 
 /**
@@ -23,14 +24,15 @@ export const getAllUsersService = async (query: GetAllUsersQueryType) => {
   const limitNum = Math.min(100, Math.max(1, Number(limit)));
   const skip = (pageNum - 1) * limitNum;
 
-  const filter = search
-    ? {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ],
-    }
-    : {};
+  const filter: Record<string, any> = {};
+
+  if (search) {
+    const escapedSearch = escapeRegexChars(search);
+    filter.$or = [
+      { name: { $regex: escapedSearch, $options: "i" } },
+      { email: { $regex: escapedSearch, $options: "i" } },
+    ];
+  }
 
   Logger.info("Fetching all users", { search, page: pageNum, limit: limitNum });
 

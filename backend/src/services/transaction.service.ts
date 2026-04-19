@@ -1,6 +1,7 @@
 import { TransactionModel } from "../models/transaction.model.js";
 import {
   calculateNextEffectiveDate,
+  escapeRegexChars,
 } from "../utils/helper.js";
 import type { CreateTransactionType, UpdateTransactionType } from "../validators/transaction.validator.js";
 import { Logger } from "../utils/logger.js";
@@ -75,9 +76,10 @@ export const getAllTransactionService = async (
   };
 
   if (keyword) {
+    const escapedKeyword = escapeRegexChars(keyword);
     filterConditions.$or = [
-      { title: { $regex: keyword, $options: "i" } },
-      { category: { $regex: keyword, $options: "i" } },
+      { title: { $regex: escapedKeyword, $options: "i" } },
+      { category: { $regex: escapedKeyword, $options: "i" } },
     ];
   }
 
