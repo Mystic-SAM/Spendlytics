@@ -7,6 +7,7 @@ import ReportsPage from "@/pages/reports/ReportsPage";
 import Settings from "@/pages/settings/SettingsPage";
 import Account from "@/pages/settings/Account";
 import Appearance from "@/pages/settings/Appearance";
+import SuperAdminPage from "@/pages/sadmin/SuperAdminPage";
 
 export const authenticationRoutePaths = [
   {
@@ -32,3 +33,10 @@ export const protectedRoutePaths = [
     ]
   },
 ];
+
+export const superAdminRoutePaths = [
+  {
+    path: PROTECTED_ROUTES.SUPER_ADMIN,
+    element: <SuperAdminPage />,
+  },
+]

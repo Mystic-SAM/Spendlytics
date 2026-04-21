@@ -22,6 +22,8 @@ import cronRoutes from "./routes/cron.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import { cronAuthMiddleware } from "./middlewares/cronAuth.middleware.js";
+import adminRoutes from "./routes/admin.routes.js";
+import { requireSuperAdmin } from "./middlewares/requireSuperAdmin.middleware.js";
 
 // Initialize logger (setup file logging and cleanup old logs)
 Logger.initialize();
@@ -96,6 +98,9 @@ app.use(`${BASE_PATH}/user`, passportAuthenticateJwt, userRoutes);
 app.use(`${BASE_PATH}/transaction`, passportAuthenticateJwt, transactionRoutes);
 app.use(`${BASE_PATH}/report`, passportAuthenticateJwt, reportRoutes);
 app.use(`${BASE_PATH}/analytics`, passportAuthenticateJwt, analyticsRoutes);
+
+// Admin routes
+app.use(`${BASE_PATH}/admin`, passportAuthenticateJwt, requireSuperAdmin, adminRoutes);
 
 // Internal cron endpoints — secured via CRON_SECRET header (triggered by Vercel Cron)
 app.use(`${BASE_PATH}/crons`, cronAuthMiddleware, cronRoutes);

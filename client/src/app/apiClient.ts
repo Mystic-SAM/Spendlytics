@@ -79,6 +79,6 @@ export const apiClient = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
   refetchOnMountOrArgChange: true,
-  tagTypes: ["transactions", "analytics"],
+  tagTypes: ["transactions", "analytics", "users"],
   endpoints: () => ({}),
 });

@@ -15,6 +15,7 @@ import {
 import { createUserContent } from "@google/genai";
 import { reportInsightPrompt } from "../utils/prompts.js";
 import { Logger } from "../utils/logger.js";
+import { generateReportExcel } from "../utils/excel-generator.js";
 
 export const getAllReportsService = async (
   userId: string,
@@ -255,17 +256,61 @@ export const generateReportService = async (
 
   const periodLabel = formatDateRange(fromDate, toDate);
 
-  const aiStartTime = Date.now();
-  const insights = await generateInsightsAI({
-    totalIncome,
-    totalExpenses,
-    totalInvestement,
-    availableBalance,
-    savingsRate,
-    categories: byCategory,
-    periodLabel,
+  // Fetch all transactions for Excel generation in parallel with AI insights
+  const [allTransactions, insights] = await Promise.all([
+    TransactionModel.find(
+      {
+        userId,
+        date: { $gte: fromDate, $lte: toDate },
+      },
+      {},
+      { sort: { date: -1 } },
+    ),
+    generateInsightsAI({
+      totalIncome,
+      totalExpenses,
+      totalInvestement,
+      availableBalance,
+      savingsRate,
+      categories: byCategory,
+      periodLabel,
+    }),
+  ]);
+
+  Logger.debug("generateReportService: Fetched transactions for Excel", {
+    userId,
+    transactionCount: allTransactions.length,
+    hasInsights: !!insights,
   });
-  const aiDuration = Date.now() - aiStartTime;
+
+  // Generate Excel file
+  const excelStartTime = Date.now();
+  let excelBuffer: Buffer | undefined;
+
+  try {
+    excelBuffer = await generateReportExcel(allTransactions, {
+      totalIncome: convertToINR(totalIncome),
+      totalExpenses: convertToINR(totalExpenses),
+      totalInvestment: convertToINR(totalInvestement),
+      availableBalance: convertToINR(availableBalance),
+      savingsRate: Number(savingsRate.toFixed(1)),
+      categories: byCategory,
+      period: periodLabel,
+    });
+
+    const excelDuration = Date.now() - excelStartTime;
+    Logger.debug("generateReportService: Excel generated successfully", {
+      userId,
+      fileSizeKB: (excelBuffer.length / 1024).toFixed(2),
+      duration: `${excelDuration}ms`,
+    });
+  } catch (error) {
+    Logger.error("generateReportService: Failed to generate Excel", error, {
+      userId,
+    });
+    // Don't fail the report generation if Excel generation fails
+    excelBuffer = undefined;
+  }
 
   const totalDuration = Date.now() - startTime;
 
@@ -275,7 +320,7 @@ export const generateReportService = async (
     totalExpenses: convertToINR(totalExpenses),
     savingsRate,
     categoriesCount: Object.keys(byCategory).length,
-    aiDuration: `${aiDuration}ms`,
+    transactionCount: allTransactions.length,
     totalDuration: `${totalDuration}ms`,
   });
 
@@ -293,6 +338,7 @@ export const generateReportService = async (
       })),
     },
     insights,
+    excelBuffer, // Return Excel buffer for use in email
   };
 };
 

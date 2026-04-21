@@ -11,9 +11,16 @@ export const transactionFormSchema = z.object({
   date: z.date({
     error: "Please select a date.",
   }),
-  paymentMethod: z
-    .string()
-    .min(1, { error: "Please select a payment method." }),
+  paymentMethod: z.
+    enum([
+      PAYMENT_METHODS_ENUM.CARD,
+      PAYMENT_METHODS_ENUM.BANK_TRANSFER,
+      PAYMENT_METHODS_ENUM.UPI,
+      PAYMENT_METHODS_ENUM.CASH,
+      PAYMENT_METHODS_ENUM.OTHER,
+    ], {
+      message: "Please select a payment method.",
+    }),
   isRecurring: z.boolean(),
   frequency: z
     .enum([
@@ -51,4 +58,5 @@ export const importTransactionSchema = z.object({
       message: `Payment method must be one of: ${Object.values(PAYMENT_METHODS_ENUM).join(", ")}`,
     })
   ]).transform((val) => (val === "" ? undefined : val)).optional(),
+  description: z.string().optional(),
 });

@@ -2,11 +2,12 @@ import { DataTable } from "@/components/data-table/DataTable";
 import { TRANSACTION_CATEGORY, type RecurringStatusType, type TransactionCategoryType } from "@/constants/constants";
 import { useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
 import useDebouncedSearch from "@/hooks/useDebounceSearch";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { transactionColumns } from "./transactionColumns";
 import { DateRangeEnum, DateRangeSelect, type DateRangeType } from "@/components/DateRangeSelect";
-import { format } from "date-fns";
 import type { SortingState } from "@tanstack/react-table";
+import { formatDateToShort } from "@/lib/utils";
+import type { GetAllTransactionParams } from "@/features/transaction/transactionTypes";
 
 type FilterType = {
   type?: TransactionCategoryType | undefined;
@@ -15,12 +16,21 @@ type FilterType = {
   pageSize?: number;
 };
 
-const TransactionTable = (props: {
+type TransactionTableProps = {
   pageSize?: number;
   isShowPagination?: boolean;
   isShowDateFilter?: boolean;
-}) => {
-  const { pageSize, isShowPagination, isShowDateFilter } = props;
+  onQueryParamsChange?: (params: GetAllTransactionParams) => void;
+};
+
+const TransactionTable = (props: TransactionTableProps) => {
+  const {
+    pageSize,
+    isShowPagination,
+    isShowDateFilter,
+    onQueryParamsChange,
+  } = props;
+
   const [filter, setFilter] = useState<FilterType>({
     type: undefined,
     recurringStatus: undefined,
@@ -54,8 +64,8 @@ const TransactionTable = (props: {
     if (dateRange.value === DateRangeEnum.CUSTOM && dateRange.from && dateRange.to) {
       return {
         dateRangePreset: DateRangeEnum.CUSTOM,
-        customFrom: format(dateRange.from, "yyyy-MM-dd"),
-        customTo: format(dateRange.to, "yyyy-MM-dd"),
+        customFrom: formatDateToShort(dateRange.from),
+        customTo: formatDateToShort(dateRange.to),
       };
     }
 
@@ -80,7 +90,7 @@ const TransactionTable = (props: {
     };
   })();
 
-  const { data, isFetching } = useGetAllTransactionsQuery({
+  const queryParams = useMemo<GetAllTransactionParams>(() => ({
     keyword: debouncedTerm,
     type: filter.type,
     recurringStatus: filter.recurringStatus,
@@ -88,7 +98,26 @@ const TransactionTable = (props: {
     pageSize: filter.pageSize,
     ...dateRangeParams,
     ...sortParams,
-  });
+  }), [
+    debouncedTerm,
+    filter.type,
+    filter.recurringStatus,
+    filter.pageNumber,
+    filter.pageSize,
+    dateRangeParams.dateRangePreset,
+    dateRangeParams.customFrom,
+    dateRangeParams.customTo,
+    sortParams.sortBy,
+    sortParams.sortOrder,
+  ]);
+
+  useEffect(() => {
+    if (onQueryParamsChange) {
+      onQueryParamsChange(queryParams);
+    }
+  }, [queryParams, onQueryParamsChange]);
+
+  const { data, isFetching } = useGetAllTransactionsQuery(queryParams);
 
   const transactions = data?.transactions || [];
 
@@ -112,6 +141,11 @@ const TransactionTable = (props: {
       type: type as TransactionCategoryType,
       recurringStatus: frequency as RecurringStatusType,
     }));
+  };
+
+  const handleDateRangeChange = (newDateRange: DateRangeType) => {
+    setDateRange(newDateRange);
+    handlePageChange(1);
   };
 
   const handlePageChange = (pageNumber: number) => {
@@ -158,7 +192,7 @@ const TransactionTable = (props: {
         isShowDateFilter ? (
           <DateRangeSelect
             dateRange={dateRange}
-            setDateRange={setDateRange}
+            setDateRange={handleDateRangeChange}
             defaultRange={DateRangeEnum.ALL_TIME}
             showCustom
           />

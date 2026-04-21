@@ -1,10 +1,15 @@
+import { enIN } from "date-fns/locale";
+
 export const MAX_IMPORT_LIMIT = 300;
+export const MAX_TRANSACTIONS_EXPORT_LIMIT = 300;
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export const MIN_TRANSACTION_DATE = new Date("2026-01-01");
 
 export const OTP_DIGITS = 6;
 export const OTP_RESEND_COOLDOWN_SEC = 120; // 2 minutes
+
+export const DATE_LOCALE = enIN;
 
 export const CATEGORIES = [
   { value: "food", label: "Food" },

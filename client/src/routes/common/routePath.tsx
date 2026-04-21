@@ -13,4 +13,5 @@ export const PROTECTED_ROUTES = {
   REPORTS: "/reports",
   SETTINGS: "/settings",
   SETTINGS_APPEARANCE: "/settings/appearance",
+  SUPER_ADMIN: "/super-admin",
 };

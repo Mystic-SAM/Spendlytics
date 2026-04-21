@@ -49,7 +49,7 @@ export interface TransactionType {
   nextRecurringDate: string | null;
   lastProcessed: string | null;
   status: string;
-  paymentMethod: string;
+  paymentMethod: PaymentMethodType;
   createdAt: string;
   updatedAt: string;
   id?: string;

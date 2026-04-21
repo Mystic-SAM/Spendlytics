@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
   Card,
@@ -23,6 +22,7 @@ import type { DateRangeType } from "@/components/DateRangeSelect";
 import { EmptyState } from "@/components/EmptyState";
 import { formatCurrency } from "@/lib/formatCurrency";
 import type { FC } from "react";
+import { formatDateLocalized } from "@/lib/utils";
 
 interface PropsType {
   dateRange?: DateRangeType;
@@ -150,7 +150,7 @@ const DashboardDataChart: FC<PropsType> = (props) => {
                 tickMargin={8}
                 minTickGap={isMobile ? 20 : 25}
                 tickFormatter={(value) =>
-                  format(new Date(value), isMobile ? "MMM d" : "MMMM d, yyyy")
+                  formatDateLocalized(value, isMobile ? "MMM d" : undefined)
                 }
               />
               <ChartTooltip
@@ -162,7 +162,7 @@ const DashboardDataChart: FC<PropsType> = (props) => {
                 content={
                   <ChartTooltipContent
                     labelFormatter={(value) =>
-                      format(new Date(value), "MMM d, yyyy")
+                      formatDateLocalized(value)
                     }
                     indicator="line"
                     formatter={(value, name) => {

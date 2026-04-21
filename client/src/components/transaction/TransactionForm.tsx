@@ -26,7 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { DrawerFooter } from "@/components/ui/drawer";
-import { cn } from "@/lib/utils";
+import { cn, formatDateLocalized } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   TRANSACTION_FREQUENCY,
@@ -36,6 +36,7 @@ import {
   TRANSACTION_FREQUENCY_OPTIONS,
   TRANSACTION_CATEGORY_OPTIONS,
   MIN_TRANSACTION_DATE,
+  PAYMENT_METHODS_ENUM,
 } from "@/constants/constants";
 import { Switch } from "../ui/switch";
 import CurrencyInputField from "../ui/currency-input";
@@ -47,9 +48,7 @@ import {
   useUpdateTransactionMutation,
 } from "@/features/transaction/transactionAPI";
 import { transactionFormSchema } from "@/validators/transactionValidators";
-import { format } from "date-fns";
-import { enIN } from "date-fns/locale";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type FormValues = z.infer<typeof transactionFormSchema>;
 
@@ -59,6 +58,7 @@ const TransactionForm = (props: {
   onCloseDrawer?: () => void;
 }) => {
   const { onCloseDrawer, isEdit = false, transactionId } = props;
+  const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
   const { data, isLoading } = useGetSingleTransactionQuery(
     transactionId || "",
@@ -78,7 +78,7 @@ const TransactionForm = (props: {
       type: TRANSACTION_CATEGORY.EXPENSE,
       category: "",
       date: new Date(),
-      paymentMethod: "",
+      paymentMethod: PAYMENT_METHODS_ENUM.UPI,
       isRecurring: false,
       frequency: null,
       description: "",
@@ -228,7 +228,7 @@ const TransactionForm = (props: {
                       <FormLabel>Category</FormLabel>
                       <SingleSelector
                         value={getCategoryOption()}
-                        onChange={(option) => field.onChange(option.value)}
+                        onChange={(option) => field.onChange(option?.value)}
                         options={CATEGORIES}
                         placeholder="Select or type a category"
                         creatable
@@ -246,7 +246,7 @@ const TransactionForm = (props: {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date</FormLabel>
-                    <Popover modal={false}>
+                    <Popover modal={false} open={isDatePopoverOpen} onOpenChange={setIsDatePopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -257,7 +257,7 @@ const TransactionForm = (props: {
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP", { locale: enIN })
+                              formatDateLocalized(field.value)
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -272,7 +272,10 @@ const TransactionForm = (props: {
                         <CalendarComponent
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setIsDatePopoverOpen(false);
+                          }}
                           disabled={(date) => date < MIN_TRANSACTION_DATE}
                           autoFocus
                         />
@@ -290,7 +293,7 @@ const TransactionForm = (props: {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Payment Method</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                       <FormControl className="w-full">
                         <SelectTrigger>
                           <SelectValue placeholder="Select payment method" />

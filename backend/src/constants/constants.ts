@@ -18,6 +18,11 @@ export const APP_CONSTANTS = {
    * Session transaction timeout in milliseconds
    */
   SESSION_TIMEOUT_MS: 10000,
+
+  /** Excel MIME type for generated reports */
+  EXCEL_MIME_TYPE: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+  MAX_TRANSACTIONS_EXPORT_LIMIT: 300,
 } as const;
 
 /** Cookie name used for the refresh token. */

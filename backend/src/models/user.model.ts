@@ -6,6 +6,7 @@ export interface UserDocument extends Document {
   email: string;
   profilePicture?: string | null;
   password: string;
+  isSuperAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
@@ -38,6 +39,10 @@ const userSchema = new Schema(
       type: String,
       select: false,
       required: true,
+    },
+    isSuperAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   {

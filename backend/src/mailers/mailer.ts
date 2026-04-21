@@ -4,12 +4,19 @@ import { Logger } from "../utils/logger.js";
 import { AppError } from "../utils/app-error.js";
 import { randomUUID } from "crypto";
 
-type Params = {
+interface Attachment {
+  filename: string;
+  content: Buffer;
+  mimeType: string;
+}
+
+export type Params = {
   to: string | string[];
   subject: string;
   text: string;
   html: string;
   from?: string;
+  attachments?: Attachment[];
 };
 
 const mail_sender = `Spendlytics <${Env.GMAIL_SENDER}>`;
@@ -71,6 +78,84 @@ const buildMimeMessage = (
 };
 
 /**
+ * Builds a MIME formatted message with multipart/mixed structure
+ * for messages with attachments. Uses nested multipart/alternative
+ * for the body content.
+ */
+const buildMimeMessageWithAttachments = (
+  to: string | string[],
+  from: string,
+  subject: string,
+  text: string,
+  html: string,
+  attachments: Attachment[],
+  outerBoundary: string,
+  innerBoundary: string,
+): string => {
+  Logger.debug("Building MIME message with attachments", {
+    recipientCount: Array.isArray(to) ? to.length : 1,
+    attachmentCount: attachments.length,
+    outerBoundary,
+    innerBoundary,
+  });
+
+  const messageParts: string[] = [
+    `From: ${from}`,
+    `To: ${Array.isArray(to) ? to.join(",") : to}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary=${outerBoundary}`,
+    "",
+    `--${outerBoundary}`,
+    `Content-Type: multipart/alternative; boundary=${innerBoundary}`,
+    "",
+    `--${innerBoundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 7bit',
+    "",
+    text,
+    "",
+    `--${innerBoundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: 7bit',
+    "",
+    html,
+    "",
+    `--${innerBoundary}--`,
+    "",
+  ];
+
+  // Add attachments
+  for (const attachment of attachments) {
+    Logger.debug("Adding attachment to message", {
+      filename: attachment.filename,
+      mimeType: attachment.mimeType,
+      sizeBytes: attachment.content.length,
+    });
+
+    const base64Content = attachment.content.toString("base64");
+
+    messageParts.push(`--${outerBoundary}`);
+    messageParts.push(
+      `Content-Type: ${attachment.mimeType}; name="${attachment.filename}"`,
+    );
+    messageParts.push('Content-Disposition: attachment; filename="' + attachment.filename + '"');
+    messageParts.push("Content-Transfer-Encoding: base64");
+    messageParts.push("");
+    messageParts.push(base64Content);
+    messageParts.push("");
+  }
+
+  messageParts.push(`--${outerBoundary}--`);
+
+  const message = messageParts.join("\r\n");
+  Logger.debug("MIME message with attachments built", {
+    messageLength: message.length,
+  });
+  return message;
+};
+
+/**
  * Validates email recipient parameter.
  * @throws {AppError} If recipient is invalid
  */
@@ -97,27 +182,58 @@ export const sendEmail = async ({
   subject,
   text,
   html,
+  attachments,
 }: Params): Promise<void> => {
   Logger.info("Preparing to send email", {
     to: Array.isArray(to) ? to : [to],
     subject,
+    hasAttachments: !!attachments && attachments.length > 0,
+    attachmentCount: attachments?.length || 0,
   });
+
   // Validate recipient
   validateRecipient(to);
 
-  // Generate unique boundary using UUID
-  const boundary = `boundary_${randomUUID()}`;
-  Logger.debug("Generated MIME boundary", { boundary });
+  let encodedMessage: string;
 
-  // Build and encode the MIME message
-  const message = buildMimeMessage(to, from, subject, text, html, boundary);
-  const encodedMessage = encodeMimeMessage(message);
+  if (attachments && attachments.length > 0) {
+    // Generate unique boundaries using UUIDs
+    const outerBoundary = `boundary_outer_${randomUUID()}`;
+    const innerBoundary = `boundary_inner_${randomUUID()}`;
+    Logger.debug("Generated MIME boundaries for message with attachments", {
+      outerBoundary,
+      innerBoundary,
+    });
+
+    // Build and encode the MIME message with attachments
+    const message = buildMimeMessageWithAttachments(
+      to,
+      from,
+      subject,
+      text,
+      html,
+      attachments,
+      outerBoundary,
+      innerBoundary,
+    );
+    encodedMessage = encodeMimeMessage(message);
+  } else {
+    // Generate unique boundary using UUID
+    const boundary = `boundary_${randomUUID()}`;
+    Logger.debug("Generated MIME boundary", { boundary });
+
+    // Build and encode the MIME message
+    const message = buildMimeMessage(to, from, subject, text, html, boundary);
+    encodedMessage = encodeMimeMessage(message);
+  }
 
   try {
     Logger.debug("Sending message to Gmail API", {
       to: Array.isArray(to) ? to.length : 1,
       subject,
+      hasAttachments: !!attachments && attachments.length > 0,
     });
+
     await gmailClient.users.messages.send({
       userId: "me",
       requestBody: {
@@ -128,11 +244,13 @@ export const sendEmail = async ({
     Logger.info("✅ Email sent successfully", {
       to: Array.isArray(to) ? to.length : 1,
       subject,
+      attachmentCount: attachments?.length || 0,
     });
   } catch (error) {
     Logger.error("Failed to send email", error, {
       to: Array.isArray(to) ? to : [to],
       subject,
+      attachmentCount: attachments?.length || 0,
     });
     throw error;
   }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  format,
   subDays,
   subMonths,
   subYears,
@@ -23,7 +22,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, formatDateLocalized, formatDateToShort } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
@@ -150,7 +149,7 @@ export const DateRangeSelect = ({
   const displayText = dateRange
     ? presets.find((p) => p.value === dateRange.value)?.label ||
     (dateRange.from
-      ? `${format(dateRange.from, "MMM dd, y")} - ${dateRange.to ? format(dateRange.to, "MMM dd, y") : "Present"
+      ? `${formatDateToShort(dateRange.from)} - ${dateRange.to ? formatDateToShort(dateRange.to) : "Present"
       }`
       : "Select a duration")
     : "Select a duration";
@@ -177,7 +176,7 @@ export const DateRangeSelect = ({
 
   const handleCustomApply = () => {
     if (customRange?.from && customRange?.to) {
-      const formattedLabel = `${format(customRange.from, "MMM dd, y")} – ${format(customRange.to, "MMM dd, y")}`;
+      const formattedLabel = `${formatDateLocalized(customRange.from)} – ${formatDateLocalized(customRange.to)}`;
       setDateRange({
         from: customRange.from,
         to: endOfDay(customRange.to),
@@ -260,7 +259,7 @@ export const DateRangeSelect = ({
             </div>
             {customRange?.from && customRange?.to && (
               <p className="text-sm text-muted-foreground text-center">
-                {format(customRange.from, "MMM dd, y")} – {format(customRange.to, "MMM dd, y")}
+                {formatDateLocalized(customRange.from)} – {formatDateLocalized(customRange.to)}
               </p>
             )}
             <DialogFooter>

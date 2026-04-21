@@ -1,15 +1,14 @@
 import { TransactionModel } from "../models/transaction.model.js";
 import {
   calculateNextEffectiveDate,
+  formatDateRange,
 } from "../utils/helper.js";
 import type { CreateTransactionType, UpdateTransactionType } from "../validators/transaction.validator.js";
 import { Logger } from "../utils/logger.js";
-import { RecurringStatusEnum, type RecurringStatus, type TransactionType } from "../enums/model-enums.js";
-import { NotFoundException } from "../utils/app-error.js";
-import type { DateRangePreset } from "../enums/date-range.enum.js";
-import { getDateRange } from "../utils/date.js";
-import type { SortOptionsType } from "../@types/index.js";
-import type { SortOrder } from "mongoose";
+import { NotFoundException, BadRequestException } from "../utils/app-error.js";
+import { generateReportExcel, type SummaryData } from "../utils/excel-generator.js";
+import { APP_CONSTANTS } from "../constants/constants.js";
+import { buildTransactionQueryOptions, type TransactionFilterParams, type TransactionSortParams } from "../utils/transaction.utils.js";
 
 export const createTransactionService = async (
   body: CreateTransactionType,
@@ -51,62 +50,17 @@ export const createTransactionService = async (
 
 export const getAllTransactionService = async (
   userId: string,
-  filters: {
-    keyword?: string | undefined;
-    type?: TransactionType | undefined;
-    recurringStatus?: RecurringStatus | undefined;
-    dateRangePreset?: DateRangePreset | undefined;
-    customFrom?: Date | undefined;
-    customTo?: Date | undefined;
-  },
+  filters: TransactionFilterParams,
   pagination: {
     pageSize: number;
     pageNumber: number;
   },
-  sortOptions: {
-    sortBy: string;
-    sortOrder: SortOptionsType["sortOrder"];
-  }
+  sortOptions: TransactionSortParams
 ) => {
-  const { keyword, type, recurringStatus, dateRangePreset, customFrom, customTo } = filters;
-
-  const filterConditions: Record<string, any> = {
-    userId,
-  };
-
-  if (keyword) {
-    filterConditions.$or = [
-      { title: { $regex: keyword, $options: "i" } },
-      { category: { $regex: keyword, $options: "i" } },
-    ];
-  }
-
-  if (type) {
-    filterConditions.type = type;
-  }
-
-  if (recurringStatus) {
-    if (recurringStatus === RecurringStatusEnum.RECURRING) {
-      filterConditions.isRecurring = true;
-    } else if (recurringStatus === RecurringStatusEnum.NON_RECURRING) {
-      filterConditions.isRecurring = false;
-    }
-  }
-
-  if (dateRangePreset || (customFrom && customTo)) {
-    const range = getDateRange(dateRangePreset, customFrom, customTo);
-    if (range.from && range.to) {
-      filterConditions.date = {
-        $gte: range.from,
-        $lte: range.to,
-      };
-    }
-  }
+  const { filterConditions, sortObject } = buildTransactionQueryOptions(userId, filters, sortOptions);
 
   const { pageSize, pageNumber } = pagination;
   const skip = (pageNumber - 1) * pageSize;
-
-  const sortObject: Record<string, SortOrder> = {[sortOptions.sortBy]: sortOptions.sortOrder};
 
   const [transactions, totalCount] = await Promise.all([
     TransactionModel.find(filterConditions)
@@ -337,4 +291,74 @@ export const bulkInsertTransactionService = async (
     });
     throw error;
   }
+};
+
+/**
+ * Fetches filtered transactions for export (without pagination, up to MAX_EXPORT_LIMIT)
+ * Calculates basic summary metrics (totalIncome, totalExpenses, totalInvestment)
+ */
+export const exportTransactionsExcelService = async (
+  userId: string,
+  filters: TransactionFilterParams,
+  sortOptions: TransactionSortParams
+) => {
+  const { filterConditions, sortObject } = buildTransactionQueryOptions(userId, filters, sortOptions);
+  const { customFrom, customTo } = filters;
+
+  const [transactions, totalCount] = await Promise.all([
+    TransactionModel.find(filterConditions)
+      .limit(APP_CONSTANTS.MAX_TRANSACTIONS_EXPORT_LIMIT)
+      .sort(sortObject),
+    TransactionModel.countDocuments(filterConditions),
+  ]);
+
+  if (transactions.length === 0) {
+    Logger.warn("exportTransactionsExcelService: No transactions found for export", {
+      userId,
+      filters,
+    });
+    throw new BadRequestException("No transactions found matching the selected filters");
+  }
+
+  const exceededLimit = totalCount > APP_CONSTANTS.MAX_TRANSACTIONS_EXPORT_LIMIT;
+
+  const summary: SummaryData = {
+    totalIncome: 0,
+    totalExpenses: 0,
+    totalInvestment: 0,
+  };
+
+  if (customFrom && customTo) {
+    summary.period = formatDateRange(customFrom, customTo);
+  }
+
+  for (const transaction of transactions) {
+    switch (transaction.type) {
+      case "INCOME":
+        summary.totalIncome += transaction.amount;
+        break;
+      case "EXPENSE":
+        summary.totalExpenses += transaction.amount;
+        break;
+      case "INVESTMENT":
+        summary.totalInvestment += transaction.amount;
+        break;
+    }
+  }
+
+  Logger.debug("exportTransactionsExcelService: Generated summary", {
+    userId,
+    summary,
+    transactionCount: transactions.length,
+    exceededLimit,
+  });
+
+  const buffer = await generateReportExcel(transactions, summary);
+
+  return {
+    buffer,
+    totalCount,
+    transactionsCount: transactions.length,
+    exceededLimit,
+  };
 };

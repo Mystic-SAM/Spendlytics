@@ -29,8 +29,14 @@ const LogoutDialog = ({ isOpen, setIsOpen }: LogoutDialogProps) => {
       setIsOpen(false);
     }
   };
+
+  const handleOpenChange = (val: boolean) => {
+    if (!val && isPending) return;
+    setIsOpen(val);
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Are you sure you want to log out?</DialogTitle>

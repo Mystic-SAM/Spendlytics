@@ -108,3 +108,20 @@ export function capitalizeFirstLetter(string: string): string {
   if (!string || string.length === 0) return string;
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
+
+/**
+ * Escapes special regex characters in a string
+ * This prevents regex errors when special characters like /, \, *, +, ?, ^, $, etc. are present.
+ * @param str - The string to escape
+ * @returns The escaped string safe for regex queries
+ */
+export function escapeRegexChars(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Generates a sanitized filename for the report Excel file
+ */
+export const generateExcelFilename = (period: string): string => {
+  return `Financial Report ${period}.xlsx`;
+};

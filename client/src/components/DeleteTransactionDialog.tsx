@@ -51,34 +51,37 @@ const DeleteTransactionDialog = (props: ConfirmDeleteDialogProps) => {
     useDeleteTransactionMutation();
   const isDeleting = isBulkDeleting || isSingleDeleting;
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (isDeleting) return;
 
-    if (isBulkDelete) {
-      bulkDeleteTransaction(transactionId)
-        .unwrap()
-        .then(() => {
-          toast.success("Selected transactions deleted successfully");
-        })
-        .catch((error) => {
-          toast.error(error.data?.message || "Failed to delete transactions");
-        });
-    } else {
-      deleteTransaction(transactionId)
-        .unwrap()
-        .then(() => {
-          toast.success("Transaction deleted successfully");
-        })
-        .catch((error) => {
-          toast.error(error.data?.message || "Failed to delete transaction");
-        });
+    try {
+      if (isBulkDelete) {
+        await bulkDeleteTransaction(transactionId).unwrap();
+        toast.success("Selected transactions deleted successfully");
+      } else {
+        await deleteTransaction(transactionId).unwrap();
+        toast.success("Transaction deleted successfully");
+      }
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message ||
+        (isBulkDelete
+          ? "Failed to delete transactions"
+          : "Failed to delete transaction")
+      );
+    } finally {
+      onConfirm?.();
+      setIsOpen(false);
     }
-    onConfirm?.();
-    setIsOpen(false);
   };
 
+  const handleOpenChange = (val: boolean) => {
+    if (!val && isDeleting) return;
+    setIsOpen(val);
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
