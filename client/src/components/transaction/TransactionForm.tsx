@@ -36,6 +36,7 @@ import {
   TRANSACTION_FREQUENCY_OPTIONS,
   TRANSACTION_CATEGORY_OPTIONS,
   MIN_TRANSACTION_DATE,
+  PAYMENT_METHODS_ENUM,
 } from "@/constants/constants";
 import { Switch } from "../ui/switch";
 import CurrencyInputField from "../ui/currency-input";
@@ -77,7 +78,7 @@ const TransactionForm = (props: {
       type: TRANSACTION_CATEGORY.EXPENSE,
       category: "",
       date: new Date(),
-      paymentMethod: "",
+      paymentMethod: PAYMENT_METHODS_ENUM.UPI,
       isRecurring: false,
       frequency: null,
       description: "",
@@ -292,7 +293,7 @@ const TransactionForm = (props: {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Payment Method</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                       <FormControl className="w-full">
                         <SelectTrigger>
                           <SelectValue placeholder="Select payment method" />

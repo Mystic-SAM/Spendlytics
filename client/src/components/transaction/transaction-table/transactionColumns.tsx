@@ -220,7 +220,6 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
 ];
 
 const ActionsCell = ({ row }: { row: any }) => {
-  //const isRecurring = row.original.isRecurring;
   const transactionId: string = row.original.id;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
