@@ -133,11 +133,13 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
     }: SingleSelectorProps,
     ref: React.Ref<SingleSelectorRef>
   ) => {
+    const containerRef = React.useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [open, setOpen] = React.useState(false);
     const [onScrollbar, setOnScrollbar] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const isUnselecting = React.useRef(false);
 
     const [selected, setSelected] = React.useState<Option | undefined>(value);
     const [options, setOptions] = React.useState<GroupOption>(
@@ -184,7 +186,16 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
       if (arrayOptions) {
         setOptions(transToGroupOption(arrayOptions, groupBy));
       }
+
+      isUnselecting.current = true;
     }, [arrayOptions, groupBy, onChange]);
+
+    useEffect(() => {
+      if (isUnselecting.current && inputRef.current) {
+        inputRef.current.focus();
+        isUnselecting.current = false;
+      }
+    }, [selected]);
 
     useEffect(() => {
       // When dropdown opens, ensure all options are shown
@@ -211,9 +222,7 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
     }, [open]);
 
     useEffect(() => {
-      if (value !== undefined) {
-        setSelected(value);
-      }
+      setSelected(value);
     }, [value]);
 
     useEffect(() => {
@@ -308,6 +317,8 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
             e.stopPropagation();
           }}
           onSelect={(value: string) => {
+            containerRef.current?.focus();
+
             // Create the new option
             const newOption = { value, label: value };
 
@@ -364,6 +375,32 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
       return undefined;
     }, [creatable, commandProps?.filter]);
 
+    const handleCommandKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Tab") {
+        setOpen(false);
+      }
+      if ((e.key === "Enter" || e.key === " ") && !open) {
+        if ((e.target as HTMLElement).localName === "button") return;
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+
+    const handleRemoveBtnKeydown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        e.stopPropagation();
+        handleUnselect();
+      }
+    };
+
+    const handleCommandInputKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Tab") {
+        setOpen(false);
+      }
+      inputProps?.onKeyDown?.(e);
+    };
+
     return (
       <Command
         ref={dropdownRef}
@@ -377,10 +414,13 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
         filter={commandFilter()}
       >
         <div
+          ref={containerRef}
+          tabIndex={selected ? 0 : -1}
           className={cn(
-            "flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+            "flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
             className
           )}
+          onKeyDown={handleCommandKeyDown}
           onClick={() => {
             if (disabled) return;
 
@@ -388,10 +428,10 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
             setOpen(true);
 
             // Clear input value when opening to ensure filtering doesn't restrict options
-            
+
             // Force showing all options
             setShowAllOptions(true);
-            
+
             setInputValue("");
 
 
@@ -424,6 +464,7 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
                 <button
                   type="button"
                   className="ml-2"
+                  onKeyDown={handleRemoveBtnKeydown}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleUnselect();
@@ -444,6 +485,7 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
                 setShowAllOptions(value.length === 0);
                 inputProps?.onValueChange?.(value);
               }}
+              onKeyDown={handleCommandInputKeydown}
               onBlur={(event) => {
                 if (!onScrollbar) {
                   setOpen(false);
@@ -523,31 +565,32 @@ const SingleSelector = React.forwardRef<SingleSelectorRef, SingleSelectorProps>(
                                 key={option.value}
                                 value={option.label}
                                 disabled={option.disable}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onSelect={() => {
-                                // Clear input to ensure no filtering is applied next time
-                                setInputValue("");
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                                onSelect={() => {
+                                  containerRef.current?.focus();
+                                  // Clear input to ensure no filtering is applied next time
+                                  setInputValue("");
 
-                                // Set selected option
-                                setSelected(option);
-                                onChange?.(option);
+                                  // Set selected option
+                                  setSelected(option);
+                                  onChange?.(option);
 
-                                // Close dropdown
-                                setOpen(false);
-                              }}
-                              className={cn(
-                                "cursor-pointer",
-                                option.disable &&
+                                  // Close dropdown
+                                  setOpen(false);
+                                }}
+                                className={cn(
+                                  "cursor-pointer",
+                                  option.disable &&
                                   "cursor-default text-muted-foreground"
-                              )}
-                            >
-                              {option.label}
-                            </CommandItem>
-                          );
-                        })}
+                                )}
+                              >
+                                {option.label}
+                              </CommandItem>
+                            );
+                          })}
                       </>
                     </CommandGroup>
                   ))}

@@ -228,7 +228,7 @@ const TransactionForm = (props: {
                       <FormLabel>Category</FormLabel>
                       <SingleSelector
                         value={getCategoryOption()}
-                        onChange={(option) => field.onChange(option.value)}
+                        onChange={(option) => field.onChange(option?.value)}
                         options={CATEGORIES}
                         placeholder="Select or type a category"
                         creatable
