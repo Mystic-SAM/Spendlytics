@@ -18,7 +18,7 @@ const AddTransactionDrawer = () => {
   const handleClose = () => setOpen(false);
 
   return (
-    <Drawer direction="right" open={open} onOpenChange={setOpen}>
+    <Drawer direction="right" open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerTrigger asChild>
         <Button className="text-white">
           <PlusIcon className="h-4 w-4" />
