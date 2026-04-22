@@ -62,7 +62,7 @@ export const buildTransactionQueryOptions = (
 
   const sortObject: Record<string, SortOrder> = {
     [sortOptions.sortBy]: sortOptions.sortOrder,
-    createdAt: 1, // Secondary sort: latest created transactions first
+    createdAt: -1, // Secondary sort: latest created transactions first
   };
 
   return { filterConditions, sortObject };

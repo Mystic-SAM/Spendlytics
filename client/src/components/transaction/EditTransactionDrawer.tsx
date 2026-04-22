@@ -11,7 +11,7 @@ import TransactionForm from "./TransactionForm";
 const EditTransactionDrawer = () => {
   const { open, transactionId, onCloseDrawer } = useEditTransactionDrawer();
   return (
-    <Drawer open={open} onOpenChange={onCloseDrawer} direction="right">
+    <Drawer open={open} onOpenChange={onCloseDrawer} direction="right" repositionInputs={false}>
       <DrawerContent className="max-w-md">
         <DrawerHeader>
           <DrawerTitle className="text-xl font-semibold">
