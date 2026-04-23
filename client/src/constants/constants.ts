@@ -12,22 +12,22 @@ export const OTP_RESEND_COOLDOWN_SEC = 120; // 2 minutes
 export const DATE_LOCALE = enIN;
 
 export const CATEGORIES = [
-  { value: "food", label: "Food" },
-  { value: "groceries", label: "Groceries" },
-  { value: "dining", label: "Dining & Restaurants" },
-  { value: "travel", label: "Travel" },
-  { value: "entertainment", label: "Entertainment" },
-  { value: "transportation", label: "Transportation" },
-  { value: "shopping", label: "Shopping" },
-  { value: "housing", label: "Housing & Rent" },
-  { value: "healthcare", label: "Healthcare" },
-  { value: "utilities", label: "Utilities" },
-  { value: "recharge", label: "Recharge" },
-  { value: "salary", label: "Salary" },
-  { value: "bonus", label: "Bonus" },
+  { value: "Food", label: "Food" },
+  { value: "Groceries", label: "Groceries" },
+  { value: "Dining", label: "Dining & Restaurants" },
+  { value: "Travel", label: "Travel" },
+  { value: "Entertainment", label: "Entertainment" },
+  { value: "Transportation", label: "Transportation" },
+  { value: "Shopping", label: "Shopping" },
+  { value: "Housing", label: "Housing & Rent" },
+  { value: "Healthcare", label: "Healthcare" },
+  { value: "Utilities", label: "Utilities" },
+  { value: "Recharge", label: "Recharge" },
+  { value: "Salary", label: "Salary" },
+  { value: "Bonus", label: "Bonus" },
   { value: "Income", label: "Income" },
   { value: "Investment", label: "Investment" },
-  { value: "other", label: "Other" },
+  { value: "Other", label: "Other" },
 ];
 
 export const PAYMENT_METHODS_ENUM = {
