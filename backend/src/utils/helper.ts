@@ -7,6 +7,16 @@ import { format } from "date-fns";
 import { APP_CONSTANTS } from "../constants/constants.js";
 
 /**
+ * Normalizes a date to 00:00:00 UTC.
+ * This is used to store "just date" information consistently across timezones.
+ */
+export function normalizeToUTCMidnight(date: Date | string): Date {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
  * Sets a date to midnight in IST (Indian Standard Time, UTC +5:30).
  * @param date - The date to adjust
  * @returns The date adjusted to IST midnight

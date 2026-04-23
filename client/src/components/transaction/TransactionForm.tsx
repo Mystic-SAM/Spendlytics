@@ -26,7 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { DrawerFooter } from "@/components/ui/drawer";
-import { cn, formatDateLocalized } from "@/lib/utils";
+import { cn, formatDateLocalized, normalizeToUTCMidnight } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   TRANSACTION_FREQUENCY,
@@ -111,7 +111,7 @@ const TransactionForm = (props: {
       paymentMethod: values.paymentMethod,
       description: values.description || "",
       amount: Number(values.amount),
-      date: values.date.toISOString(),
+      date: normalizeToUTCMidnight(values.date).toISOString(),
       isRecurring: values.isRecurring || false,
       recurringInterval: values.frequency || null,
     };

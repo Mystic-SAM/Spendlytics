@@ -6,6 +6,7 @@ import {
   PaymentMethodEnum,
 } from "../enums/model-enums.js";
 import { convertToINR, convertToPaise } from "../utils/currency.js";
+import { normalizeToUTCMidnight } from "../utils/helper.js";
 
 const transactionSchema = new Schema(
   {
@@ -48,18 +49,8 @@ const transactionSchema = new Schema(
     },
     date: {
       type: Date,
-      default: () => {
-        // Normalize date to start of day (00:00:00) to store only date without time
-        const date = new Date();
-        date.setHours(0, 0, 0, 0);
-        return date;
-      },
-      set: (value: Date) => {
-        // Normalize date to start of day (00:00:00) to store only date without time
-        const date = new Date(value);
-        date.setHours(0, 0, 0, 0);
-        return date;
-      },
+      default: () => normalizeToUTCMidnight(new Date()),
+      set: (value: Date) => normalizeToUTCMidnight(value),
     },
     isRecurring: {
       type: Boolean,
