@@ -48,3 +48,13 @@ export const getInitials = (name: string) =>
     .map((n) => n[0])
     .join("")
     .toUpperCase();
+
+/**
+ * Normalizes a date to 00:00:00 UTC for the given local date.
+ * This ensures the calendar date is preserved across timezones.
+ */
+export function normalizeToUTCMidnight(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
+}
