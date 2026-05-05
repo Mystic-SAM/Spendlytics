@@ -111,6 +111,7 @@ const sendReportWithErrorHandling = async (
         period: reportData.period,
         totalIncome: reportData.summary.income,
         totalExpenses: reportData.summary.expenses,
+        totalInvestment: reportData.summary.investment,
         availableBalance: reportData.summary.balance,
         savingsRate: reportData.summary.savingsRate,
         topSpendingCategories: reportData.summary.topCategories,

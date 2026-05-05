@@ -1,7 +1,7 @@
 export const reportInsightPrompt = ({
   totalIncome,
   totalExpenses,
-  totalInvestement,
+  totalInvestment,
   availableBalance,
   savingsRate,
   categories,
@@ -9,7 +9,7 @@ export const reportInsightPrompt = ({
 }: {
   totalIncome: number;
   totalExpenses: number;
-  totalInvestement: number;
+  totalInvestment: number;
   availableBalance: number;
   savingsRate: number;
   categories: Record<string, { amount: number; percentage: number }>;
@@ -32,7 +32,7 @@ export const reportInsightPrompt = ({
   🧾 Report for: ${periodLabel}
   - Total Income: ₹${totalIncome.toFixed(2)}
   - Total Expenses: ₹${totalExpenses.toFixed(2)}
-  - Total Investment: ₹${totalInvestement.toFixed(2)}
+  - Total Investment: ₹${totalInvestment.toFixed(2)}
   - Available Balance: ₹${availableBalance.toFixed(2)}
   - Savings Rate: ${savingsRate}%
 

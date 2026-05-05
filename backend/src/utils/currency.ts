@@ -14,10 +14,18 @@ export const convertToINR = (paise: number): number => {
   return paise / 100;
 };
 
-export const formatCurrencyINR = (paise: number): string => {
-  const rupees = convertToINR(paise);
+/**
+ * Formats a value that is already in INR (rupees) for display.
+ * Use this when the amount has already been converted from paise.
+ */
+export const formatRupeesINR = (rupees: number): string => {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
   }).format(rupees);
+};
+
+export const formatCurrencyINR = (paise: number): string => {
+  const rupees = convertToINR(paise);
+  return formatRupeesINR(rupees);
 };
