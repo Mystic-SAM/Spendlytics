@@ -157,7 +157,7 @@ export const generateReportService = async (
                 },
               },
 
-              totalInvestement: {
+              totalInvestment: {
                 $sum: {
                   $cond: [
                     { $eq: ["$type", TransactionTypeEnum.INVESTMENT] },
@@ -197,8 +197,8 @@ export const generateReportService = async (
         totalExpenses: {
           $arrayElemAt: ["$summary.totalExpenses", 0],
         },
-        totalInvestement: {
-          $arrayElemAt: ["$summary.totalInvestement", 0],
+        totalInvestment: {
+          $arrayElemAt: ["$summary.totalInvestment", 0],
         },
         categories: 1,
       },
@@ -207,7 +207,7 @@ export const generateReportService = async (
 
   if (
     !results?.length ||
-    (results[0]?.totalIncome === 0 && results[0]?.totalExpenses === 0)
+    (results[0]?.totalIncome === 0 && results[0]?.totalExpenses === 0 && results[0]?.totalInvestment === 0)
   ) {
     Logger.info("generateReportService: No transactions found for period", {
       userId,
@@ -220,7 +220,7 @@ export const generateReportService = async (
   const {
     totalIncome = 0,
     totalExpenses = 0,
-    totalInvestement = 0,
+    totalInvestment = 0,
     categories = [],
   } = results[0] || {};
 
@@ -228,7 +228,7 @@ export const generateReportService = async (
     userId,
     totalIncome,
     totalExpenses,
-    totalInvestement,
+    totalInvestment,
     categoriesCount: categories.length,
   });
 
@@ -247,11 +247,11 @@ export const generateReportService = async (
     {} as Record<string, { amount: number; percentage: number }>,
   );
 
-  const availableBalance = totalIncome - (totalExpenses + totalInvestement);
+  const availableBalance = totalIncome - (totalExpenses + totalInvestment);
   const savingsRate = calculateSavingRate(
     totalIncome,
     totalExpenses,
-    totalInvestement,
+    totalInvestment,
   );
 
   const periodLabel = formatDateRange(fromDate, toDate);
@@ -269,7 +269,7 @@ export const generateReportService = async (
     generateInsightsAI({
       totalIncome,
       totalExpenses,
-      totalInvestement,
+      totalInvestment,
       availableBalance,
       savingsRate,
       categories: byCategory,
@@ -291,7 +291,7 @@ export const generateReportService = async (
     excelBuffer = await generateReportExcel(allTransactions, {
       totalIncome: convertToINR(totalIncome),
       totalExpenses: convertToINR(totalExpenses),
-      totalInvestment: convertToINR(totalInvestement),
+      totalInvestment: convertToINR(totalInvestment),
       availableBalance: convertToINR(availableBalance),
       savingsRate: Number(savingsRate.toFixed(1)),
       categories: byCategory,
@@ -329,6 +329,7 @@ export const generateReportService = async (
     summary: {
       income: convertToINR(totalIncome),
       expenses: convertToINR(totalExpenses),
+      investment: convertToINR(totalInvestment),
       balance: convertToINR(availableBalance),
       savingsRate: Number(savingsRate.toFixed(1)),
       topCategories: Object.entries(byCategory)?.map(([name, cat]: any) => ({
@@ -345,7 +346,7 @@ export const generateReportService = async (
 async function generateInsightsAI({
   totalIncome,
   totalExpenses,
-  totalInvestement,
+  totalInvestment,
   availableBalance,
   savingsRate,
   categories,
@@ -353,7 +354,7 @@ async function generateInsightsAI({
 }: {
   totalIncome: number;
   totalExpenses: number;
-  totalInvestement: number;
+  totalInvestment: number;
   availableBalance: number;
   savingsRate: number;
   categories: Record<string, { amount: number; percentage: number }>;
@@ -369,7 +370,7 @@ async function generateInsightsAI({
     const prompt = reportInsightPrompt({
       totalIncome: convertToINR(totalIncome),
       totalExpenses: convertToINR(totalExpenses),
-      totalInvestement: convertToINR(totalInvestement),
+      totalInvestment: convertToINR(totalInvestment),
       availableBalance: convertToINR(availableBalance),
       savingsRate: Number(savingsRate.toFixed(1)),
       categories,
@@ -424,10 +425,10 @@ async function generateInsightsAI({
 function calculateSavingRate(
   totalIncome: number,
   totalExpenses: number,
-  totalInvestement: number,
+  totalInvestment: number,
 ) {
   if (totalIncome <= 0) return 0;
   const savingRate =
-    ((totalIncome - (totalExpenses + totalInvestement)) / totalIncome) * 100;
+    ((totalIncome - (totalExpenses + totalInvestment)) / totalIncome) * 100;
   return parseFloat(savingRate.toFixed(2));
 }

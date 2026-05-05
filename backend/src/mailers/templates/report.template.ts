@@ -1,5 +1,5 @@
 import type { ReportType } from "../../@types/report.type.js";
-import { formatCurrencyINR } from "../../utils/currency.js";
+import { formatRupeesINR } from "../../utils/currency.js";
 import { capitalizeFirstLetter } from "../../utils/helper.js";
 
 interface Category {
@@ -18,7 +18,7 @@ const buildCategoryList = (categories: Category[]): string => {
   const html = categories
     .map(
       (cat: Category) => `<li>
-      ${cat.name} - ${formatCurrencyINR(cat.amount ?? 0)} (${cat.percent}%)
+      ${cat.name} - ${formatRupeesINR(cat.amount ?? 0)} (${cat.percent}%)
       </li>
     `,
     )
@@ -42,6 +42,7 @@ export const getReportEmailTemplate = (
     period,
     totalIncome,
     totalExpenses,
+    totalInvestment,
     availableBalance,
     savingsRate,
     topSpendingCategories,
@@ -49,7 +50,7 @@ export const getReportEmailTemplate = (
   } = reportData;
 
   const reportTitle = `${capitalizeFirstLetter(frequency)} Report`;
-  const categoryList = buildCategoryList(topSpendingCategories as Category[]);
+  const categoryList = buildCategoryList(topSpendingCategories);
   const insightsList = buildInsightsList(insights);
 
   const currentYear = new Date().getFullYear();
@@ -81,15 +82,19 @@ export const getReportEmailTemplate = (
                   <table width="100%" style="border-collapse: collapse;">
                     <tr>
                       <td style="padding: 8px 0; font-size: 16px;"><strong>Total Income:</strong></td>
-                      <td style="text-align: right; font-size: 16px;">${formatCurrencyINR(totalIncome)}</td>
+                      <td style="text-align: right; font-size: 16px;">${formatRupeesINR(totalIncome)}</td>
                     </tr>
                     <tr>
                       <td style="padding: 8px 0; font-size: 16px;"><strong>Total Expenses:</strong></td>
-                      <td style="text-align: right; font-size: 16px;">${formatCurrencyINR(totalExpenses)}</td>
+                      <td style="text-align: right; font-size: 16px;">${formatRupeesINR(totalExpenses)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; font-size: 16px;"><strong>Total Investment:</strong></td>
+                      <td style="text-align: right; font-size: 16px;">${formatRupeesINR(totalInvestment)}</td>
                     </tr>
                     <tr>
                       <td style="padding: 8px 0; font-size: 16px;"><strong>Available Balance:</strong></td>
-                      <td style="text-align: right; font-size: 16px;">${formatCurrencyINR(availableBalance)}</td>
+                      <td style="text-align: right; font-size: 16px;">${formatRupeesINR(availableBalance)}</td>
                     </tr>
                     <tr>
                       <td style="padding: 8px 0; font-size: 16px;"><strong>Savings Rate:</strong></td>

@@ -1,5 +1,5 @@
 import type { ReportType } from "../@types/report.type.js";
-import { formatCurrencyINR } from "../utils/currency.js";
+import { formatRupeesINR } from "../utils/currency.js";
 import { sendEmail, type Params as EmailParams } from "./mailer.js";
 import { getReportEmailTemplate } from "./templates/report.template.js";
 import { Logger } from "../utils/logger.js";
@@ -34,9 +34,10 @@ export const sendReportEmail = async (
     );
 
     const text = `Your ${frequency} Financial Report (${report.period})
-    Income: ${formatCurrencyINR(report.totalIncome)}
-    Expenses: ${formatCurrencyINR(report.totalExpenses)}
-    Balance: ${formatCurrencyINR(report.availableBalance)}
+    Income: ${formatRupeesINR(report.totalIncome)}
+    Expenses: ${formatRupeesINR(report.totalExpenses)}
+    Investment: ${formatRupeesINR(report.totalInvestment)}
+    Balance: ${formatRupeesINR(report.availableBalance)}
     Savings Rate: ${report.savingsRate.toFixed(2)}%
 
     ${report.insights.join("\n")}
@@ -44,7 +45,7 @@ export const sendReportEmail = async (
 
     const emailParams: EmailParams = {
       to: email,
-      subject: `${frequency} Financial Report - ${report.period}`,
+      subject: `${report.period} - ${frequency} Financial Report`,
       text,
       html,
     };
